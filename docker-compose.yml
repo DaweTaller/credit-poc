@@ -1,0 +1,21 @@
+services:
+  db:
+    platform: ${PLATFORM}
+    image: mariadb:latest
+    container_name: ${APP_PREFIX}-db
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+      TZ: Europe/Prague
+    ports:
+      - ${DEV_IP}:3306:3306
+  adminer:
+    platform: ${PLATFORM}
+    image: adminer:latest
+    container_name: ${APP_PREFIX}-adminer
+    ports:
+      - ${DEV_IP}:8080:8080
+
+volumes:
+  db:

@@ -32,7 +32,11 @@ SET @missedIf = 0;
 WHILE (@lastInsertedId < @transactionsCount) DO
     SET @userId = FLOOR(1 + (RAND() * @maxUsers));
     SET @creditTypeId = FLOOR(1 + (RAND() * @creditTypes));
-    SET @userAmount = (SELECT amount FROM user_credit WHERE user_id = @userId AND credit_type_id = @creditTypeId);
+    SET @userAmount = (SELECT SUM(amount)
+                       FROM credit_audit_log
+                       WHERE user_id = @userId
+                         AND credit_type_id = @creditTypeId
+                         AND (expired_at < NOW() OR expired_at IS NULL));
 
     IF @userAmount IS NULL THEN
         -- Generate a random number between -5000 and 5000
@@ -51,20 +55,25 @@ end if;
             SET @datetimeCreated = @datetimeCreated + INTERVAL 1 HOUR;
 end if;
 
-        SET @expirateAt = (@datetimeCreated + INTERVAL (SELECT expiration_in_days FROM credit_type WHERE id = @creditTypeId) DAY);
+        SET @expirateAt = IF (
+            @amount > 0,
+            (@datetimeCreated + INTERVAL (SELECT expiration_in_days FROM credit_type WHERE id = @creditTypeId) DAY),
+            NULL
+        );
 
         -- posun času, '2023-03-26 02:00:00' neexistuje
         if DATE(@expirateAt) = '2023-03-26' AND HOUR(@expirateAt) = '2' THEN
             SET @expirateAt = @expirateAt + INTERVAL 1 HOUR;
 end if;
 
-INSERT INTO credit_audit_log (user_id, created_at, credit_type_id, amount, expired_at) VALUES (
-                                                                                                  @userId,
-                                                                                                  @datetimeCreated,
-                                                                                                  @creditTypeId,
-                                                                                                  @amount,
-                                                                                                  @expirateAt
-                                                                                              );
+INSERT INTO credit_audit_log (user_id, created_at, credit_type_id, amount, expired_at, expiration_processed) VALUES (
+                                                                                                                        @userId,
+                                                                                                                        @datetimeCreated,
+                                                                                                                        @creditTypeId,
+                                                                                                                        @amount,
+                                                                                                                        @expirateAt,
+                                                                                                                        IF (@expirateAt IS NOT NULL, 'no', 'without-expiration')
+                                                                                                                    );
 SET @lastInsertedId = (SELECT LAST_INSERT_ID());
 INSERT INTO user_credit (user_id, created_at, credit_type_id, amount) VALUES (
                                                                                  @userId,

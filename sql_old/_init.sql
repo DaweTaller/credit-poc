@@ -29,6 +29,7 @@ CREATE TABLE credit_audit_log (
     amount INT(11) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expired_at TIMESTAMP,
+    expiration_processed ENUM('yes', 'no', 'without-expiration') NOT NULL,
     note TEXT,
     CONSTRAINT fk_credit_audit_log_user_id FOREIGN KEY (user_id)
         REFERENCES user(id) ON DELETE RESTRICT ON UPDATE CASCADE,

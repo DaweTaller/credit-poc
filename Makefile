@@ -17,4 +17,4 @@ db-init:
 	$(DM) /bin/sh -c 'mariadb -u root -p${DATABASE_PASSWORD} -D${DATABASE_NAME} < /tmp/init.sql'
 
 data-init:
-	php src/data_init.php
+	php src/data-init.php

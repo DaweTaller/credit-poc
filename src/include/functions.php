@@ -39,6 +39,33 @@ function getCreditTypeExpirationInDays(PDO $pdo, int $creditTypeId): ?int {
 }
 
 /**
+ * @return array<int, array{
+ *     id: int,
+ *     creditTypeId: int,
+ *     amount: int
+ * }>
+ */
+function getUserCreditsByPriority(PDO $pdo, int $userId): array {
+    $query = $pdo->prepare(
+        'SELECT c.id, c.credit_type_id AS creditTypeId, remaining_amount AS amount
+        FROM credit c JOIN credit_type ct ON c.credit_type_id = ct.id
+        WHERE c.user_id = ?
+          AND (c.expired_at IS NULL OR c.expired_at > NOW())
+        ORDER BY ct.priority, c.expired_at ASC'
+    );
+
+    $query->execute([$userId]);
+
+    $result = $query->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($result as &$item) {
+        $item['amount'] = intval($item['amount']);
+    }
+
+    return $result;
+}
+
+/**
  * @throws ZeroAmountException
  * @throws NotEnoughtCreditsException
  */
@@ -116,31 +143,4 @@ function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount) {
 
         throw $e;
     }
-}
-
-/**
- * @return array<int, array{
- *     id: int,
- *     creditTypeId: int,
- *     amount: int
- * }>
- */
-function getUserCreditsByPriority(PDO $pdo, int $userId): array {
-    $query = $pdo->prepare(
-        'SELECT c.id, c.credit_type_id AS creditTypeId, remaining_amount AS amount
-        FROM credit c JOIN credit_type ct ON c.credit_type_id = ct.id
-        WHERE c.user_id = ?
-          AND (c.expired_at IS NULL OR c.expired_at > NOW())
-        ORDER BY ct.priority, c.expired_at ASC'
-    );
-
-    $query->execute([$userId]);
-
-    $result = $query->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($result as &$item) {
-        $item['amount'] = intval($item['amount']);
-    }
-
-    return $result;
 }

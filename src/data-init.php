@@ -1,6 +1,6 @@
 <?php
 
-use Cassandra\Exception\DivideByZeroException;
+declare(strict_types = 1);
 
 require_once __DIR__ . '/include/db-connection.php';
 require_once __DIR__ . '/include/user-names.php';
@@ -13,8 +13,8 @@ $env = parse_ini_file('.env');
 
 clearAllData($pdo);
 fillCreditTypes($pdo, $creditTypes);
-fillUsers($pdo, $env['NUMBER_OF_USERS'], $userFirstNames, $userLastNames);
-fillTransactions($pdo, $env['NUMBER_OF_TRANSACTIONS'], $env['MIN_CREDIT'], $env['MAX_CREDIT']);
+fillUsers($pdo, intval($env['NUMBER_OF_USERS']), $userFirstNames, $userLastNames);
+fillTransactions($pdo, intval($env['NUMBER_OF_TRANSACTIONS']), intval($env['MIN_CREDIT']), intval($env['MAX_CREDIT']));
 
 function clearAllData(PDO $pdo) {
     $pdo->exec('DELETE FROM credit_transaction');
@@ -66,6 +66,10 @@ function fillTransactions(PDO $pdo, int $numberOfTransactions, int $minCredit, i
         throw new Exception('MinCredit is greather then MaxCredit');
     }
 
+    if ($numberOfTransactions < 0) {
+        throw new Exception(sprintf('Number of transactions are less then 0, got %d', $numberOfTransactions));
+    }
+
     $maxUserId = $pdo->query('SELECT MAX(id) FROM user')->fetchColumn();
     $maxCreditTypeId = $pdo->query('SELECT MAX(id) FROM credit_type')->fetchColumn();
     $transactionToProcess = $numberOfTransactions;
@@ -91,10 +95,26 @@ function fillTransactions(PDO $pdo, int $numberOfTransactions, int $minCredit, i
             try {
                 addTransaction($pdo, $userId, $creditTypeId, $amount);
 
+                if ($transactionToProcess !== $numberOfTransactions && $transactionToProcess % 100 === 0) {
+                    printProcessedTransactions($transactionToProcess, $numberOfTransactions);
+                }
+
                 $transactionToProcess--;
             } catch (NotEnoughtCreditsException | ZeroAmountException $e) {
                 echo $e->getMessage() . PHP_EOL;
             }
         }
     }
+
+    printProcessedTransactions($transactionToProcess, $numberOfTransactions);
+}
+
+function printProcessedTransactions(int $transactionToProcess, int $totalTransactions) {
+    $filled = $totalTransactions - $transactionToProcess;
+
+    echo sprintf(
+        'Filled %d/%d transactions.' . PHP_EOL,
+        $filled,
+        $totalTransactions
+    );
 }

@@ -53,8 +53,8 @@ function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount) {
         if ($amount < 0) {
             $userCredit = getUserCredit($pdo, $userId, $creditTypeId);
 
-            if ($userCredit < $amount) {
-                throw new NotEnoughtCreditsException(sprintf('User %d does not have amount %d.', $userId, $amount));
+            if ($userCredit < abs($amount)) {
+                throw new NotEnoughtCreditsException(sprintf('User %d does not have amount %d.', $userId, abs($amount)));
             }
         }
 
@@ -82,7 +82,32 @@ function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount) {
             $query->execute([$creditId, $transactionId]);
         } else {
             // use credits
-            // TODO: implement this
+            $credits = getUserCreditsByPriority($pdo, $userId);
+            $remainingAmount = abs($amount);
+
+            foreach ($credits as $credit) {
+                if ($remainingAmount <= 0) {
+                    break;
+                }
+
+                $creditId = $credit['id'];
+                $creditAmount = $credit['amount'];
+                $creditTypeId = $credit['creditTypeId'];
+                $creditsToUse = $creditAmount >= $remainingAmount ? $remainingAmount : $creditAmount;
+
+                // updated credit
+                $query = $pdo->prepare('UPDATE credit SET remaining_amount = remaining_amount - ? WHERE id = ?');
+                $query->execute([$creditsToUse, $creditId]);
+
+                // insert to credit_transaction
+                $query = $pdo->prepare('INSERT INTO credit_transaction (credit_id, transaction_id) VALUES (?, ?)');
+                $query->execute([$creditId, $transactionId]);
+                $remainingAmount -= $creditsToUse;
+            }
+
+            if ($remainingAmount !== 0) {
+                throw new Exception(sprintf('Remaining amount is not 0, got %d', $remainingAmount));
+            }
         }
 
         $pdo->commit();
@@ -91,4 +116,31 @@ function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount) {
 
         throw $e;
     }
+}
+
+/**
+ * @return array<int, array{
+ *     id: int,
+ *     creditTypeId: int,
+ *     amount: int
+ * }>
+ */
+function getUserCreditsByPriority(PDO $pdo, int $userId): array {
+    $query = $pdo->prepare(
+        'SELECT c.id, c.credit_type_id AS creditTypeId, remaining_amount AS amount
+        FROM credit c JOIN credit_type ct ON c.credit_type_id = ct.id
+        WHERE c.user_id = ?
+          AND (c.expired_at IS NULL OR c.expired_at > NOW())
+        ORDER BY ct.priority, c.expired_at ASC'
+    );
+
+    $query->execute([$userId]);
+
+    $result = $query->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($result as &$item) {
+        $item['amount'] = intval($item['amount']);
+    }
+
+    return $result;
 }

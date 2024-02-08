@@ -8,6 +8,8 @@ up:
 down:
 	$(DC) down
 
+init: db-init data-init
+
 db-init:
 	$(DM) /bin/sh -c "mariadb -u root -p${DATABASE_PASSWORD} -e 'DROP DATABASE IF EXISTS ${DATABASE_NAME};'"
 	$(DM) /bin/sh -c "mariadb -u root -p${DATABASE_PASSWORD} -e 'CREATE DATABASE ${DATABASE_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"

@@ -7,6 +7,8 @@ require_once __DIR__ . '/../../exception/ZeroAmountException.php';
 require_once __DIR__ . '/../../exception/EntityNotFoundException.php';
 require_once __DIR__ . '/../../exception/InactiveCreditTypeException.php';
 
+const DATETIME_FORMAT = 'Y-m-d H:i:s';
+
 function getUserCredit(PDO $pdo, int $userId, ?int $creditTypeId = null): ?int {
     $sql = '
         SELECT SUM(amount)
@@ -26,6 +28,20 @@ function getUserCredit(PDO $pdo, int $userId, ?int $creditTypeId = null): ?int {
     $sum = $query->fetchColumn();
 
     return intval($sum);
+}
+
+function getCreditTypes(PDO $pdo): array {
+    $stmt = $pdo->prepare('SELECT * FROM credit_type');
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getUsers(PDO $pdo): array {
+    $stmt = $pdo->prepare('SELECT * FROM user');
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function getCreditTypeExpirationInDays(PDO $pdo, int $creditTypeId): ?int {

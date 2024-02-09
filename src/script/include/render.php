@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db-connection.php';
 
-function renderTable(PDO $pdo, string $table): string {
-
-    $query = $pdo->prepare('SELECT * FROM ' . $table);
+function renderTable(PDO $pdo, string $table, string $sql): string {
+    $query = $pdo->prepare($sql);
     $query->execute();
     $results = $query->fetchAll(PDO::FETCH_ASSOC);
     
@@ -14,7 +13,7 @@ function renderTable(PDO $pdo, string $table): string {
         return '';
     }
 
-    $html = sprintf('<h1>%s</h1>', $table);
+    $html = sprintf('<h2>%s</h2>', $table);
     $html .= '<table class="table table-striped">';
     $html .= '<tr>';
     foreach ($results[0] as $columnName => $value) {

@@ -19,3 +19,6 @@ db-init:
 
 data-init:
 	$(DP) php /var/www/html/script/data-init.php
+
+generate-transactions:
+	$(DP) php /var/www/html/script/generate-transactions.php

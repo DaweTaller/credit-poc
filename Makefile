@@ -2,6 +2,7 @@ include .env
 
 DC?=docker-compose
 DM?=$(DC) exec -T db
+DP?=$(DC) exec -T php-fpm
 
 up:
 	$(DC) up -d --remove-orphans
@@ -17,4 +18,4 @@ db-init:
 	$(DM) /bin/sh -c 'mariadb -u root -p${DATABASE_PASSWORD} -D${DATABASE_NAME} < /tmp/init.sql'
 
 data-init:
-	php src/data-init.php
+	$(DP) php /var/www/html/script/data-init.php

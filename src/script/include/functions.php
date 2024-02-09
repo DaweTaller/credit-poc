@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-require_once __DIR__ . '/../exception/NotEnoughtCreditsException.php';
-require_once __DIR__ . '/../exception/ZeroAmountException.php';
-require_once __DIR__ . '/../exception/EntityNotFoundException.php';
-require_once __DIR__ . '/../exception/InactiveCreditTypeException.php';
+require_once __DIR__ . '/../../exception/NotEnoughtCreditsException.php';
+require_once __DIR__ . '/../../exception/ZeroAmountException.php';
+require_once __DIR__ . '/../../exception/EntityNotFoundException.php';
+require_once __DIR__ . '/../../exception/InactiveCreditTypeException.php';
 
 function getUserCredit(PDO $pdo, int $userId, ?int $creditTypeId = null): ?int {
     $sql = '

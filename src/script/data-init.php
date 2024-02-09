@@ -9,12 +9,10 @@ require_once __DIR__ . '/include/functions.php';
 
 const DATETIME_FORMAT = 'Y-m-d H:i:s';
 
-$env = parse_ini_file('.env');
-
 clearAllData($pdo);
 fillCreditTypes($pdo, $creditTypes);
-fillUsers($pdo, intval($env['NUMBER_OF_USERS']), $userFirstNames, $userLastNames);
-fillTransactions($pdo, intval($env['NUMBER_OF_TRANSACTIONS']), intval($env['MIN_CREDIT']), intval($env['MAX_CREDIT']));
+fillUsers($pdo, intval(getenv('NUMBER_OF_USERS')), $userFirstNames, $userLastNames);
+fillTransactions($pdo, intval(getenv('NUMBER_OF_TRANSACTIONS')), intval(getenv('MIN_CREDIT')), intval(getenv('MAX_CREDIT')));
 
 function clearAllData(PDO $pdo) {
     $pdo->exec('DELETE FROM credit_transaction');

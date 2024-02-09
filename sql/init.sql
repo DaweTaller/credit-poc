@@ -60,6 +60,7 @@ CREATE TABLE credit_transaction (
     id INT(11) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
     credit_id INT(11) UNSIGNED NOT NULL,
     transaction_id INT(11) UNSIGNED NOT NULL,
+    amount INT(11) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_credit_transaction_credit_id FOREIGN KEY (credit_id)
         REFERENCES credit(id) ON DELETE RESTRICT ON UPDATE CASCADE,

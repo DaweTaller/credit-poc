@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 require_once __DIR__ . '/../exception/NotEnoughtCreditsException.php';
 require_once __DIR__ . '/../exception/ZeroAmountException.php';
+require_once __DIR__ . '/../exception/EntityNotFoundException.php';
+require_once __DIR__ . '/../exception/InactiveCreditTypeException.php';
 
 function getUserCredit(PDO $pdo, int $userId, ?int $creditTypeId = null): ?int {
     $sql = '
@@ -39,6 +41,21 @@ function getCreditTypeExpirationInDays(PDO $pdo, int $creditTypeId): ?int {
 }
 
 /**
+ * @throws EntityNotFoundException
+ */
+function isCreditTypeActive(PDO $pdo, int $creditTypeId): bool {
+    $stmt = $pdo->prepare('SELECT active FROM credit_type WHERE id = ?');
+    $stmt->execute([$creditTypeId]);
+    $result = $stmt->fetchColumn();
+
+    if ($result === null) {
+        throw new EntityNotFoundException(sprintf('Credit type with id %d does not exists', $creditTypeId));
+    }
+
+    return $result === 'yes';
+}
+
+/**
  * @return array<int, array{
  *     id: int,
  *     creditTypeId: int,
@@ -68,10 +85,16 @@ function getUserCreditsByPriority(PDO $pdo, int $userId): array {
 /**
  * @throws ZeroAmountException
  * @throws NotEnoughtCreditsException
+ * @throws InactiveCreditTypeException
+ * @throws EntityNotFoundException
  */
-function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount) {
+function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null) {
     if ($amount === 0) {
         throw new ZeroAmountException('Cant add transaction with zero amount');
+    }
+
+    if (isCreditTypeActive($pdo, $creditTypeId) === false) {
+        throw new InactiveCreditTypeException(sprintf('Credit type %d is not active', $creditTypeId));
     }
 
     $pdo->beginTransaction();
@@ -85,28 +108,30 @@ function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount) {
             }
         }
 
-        $now = new DateTimeImmutable();
+        $createdAt = $createdAt ?? new DateTimeImmutable();
         $expiredInDays = getCreditTypeExpirationInDays($pdo, $creditTypeId);
         $expiredAt = $expiredInDays !== null
-            ? $now->modify(sprintf('+%d days', $expiredInDays))->format(DATETIME_FORMAT)
+            ? $createdAt->modify(sprintf('+%d days', $expiredInDays))->format(DATETIME_FORMAT)
             : null;
+        $createdAt = $createdAt->format(DATETIME_FORMAT);
 
-        $query = $pdo->prepare('INSERT INTO transaction (user_id, credit_type_id, amount, expired_at) VALUES (?, ?, ?, ?)');
+        $query = $pdo->prepare('INSERT INTO transaction (user_id, credit_type_id, amount, created_at, expired_at) VALUES (?, ?, ?, ?, ?)');
         $query->execute([
             $userId,
             $creditTypeId,
             $amount,
+            $createdAt,
             $expiredAt
         ]);
         $transactionId = $pdo->lastInsertId();
 
         if ($amount > 0) {
             // add credits
-            $query = $pdo->prepare('INSERT INTO credit (user_id, credit_type_id, amount, remaining_amount, expired_at) VALUES (?, ?, ?, ?, ?)');
-            $query->execute([$userId, $creditTypeId, $amount, $amount, $expiredAt]);
+            $query = $pdo->prepare('INSERT INTO credit (user_id, credit_type_id, amount, remaining_amount, created_at, expired_at) VALUES (?, ?, ?, ?, ?, ?)');
+            $query->execute([$userId, $creditTypeId, $amount, $amount, $createdAt, $expiredAt]);
             $creditId = $pdo->lastInsertId();
-            $query = $pdo->prepare('INSERT INTO credit_transaction (credit_id, transaction_id) VALUES (?, ?)');
-            $query->execute([$creditId, $transactionId]);
+            $query = $pdo->prepare('INSERT INTO credit_transaction (credit_id, transaction_id, amount, created_at) VALUES (?, ?, ?, ?)');
+            $query->execute([$creditId, $transactionId, $amount, $createdAt]);
         } else {
             // use credits
             $credits = getUserCreditsByPriority($pdo, $userId);
@@ -122,13 +147,17 @@ function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount) {
                 $creditTypeId = $credit['creditTypeId'];
                 $creditsToUse = $creditAmount >= $remainingAmount ? $remainingAmount : $creditAmount;
 
+                if ($creditsToUse <= 0) {
+                    continue;
+                }
+
                 // updated credit
-                $query = $pdo->prepare('UPDATE credit SET remaining_amount = remaining_amount - ? WHERE id = ?');
-                $query->execute([$creditsToUse, $creditId]);
+                $query = $pdo->prepare('UPDATE credit SET remaining_amount = remaining_amount - ?, updated_at = ? WHERE id = ?');
+                $query->execute([$creditsToUse, $createdAt, $creditId]);
 
                 // insert to credit_transaction
-                $query = $pdo->prepare('INSERT INTO credit_transaction (credit_id, transaction_id) VALUES (?, ?)');
-                $query->execute([$creditId, $transactionId]);
+                $query = $pdo->prepare('INSERT INTO credit_transaction (credit_id, transaction_id, amount, created_at) VALUES (?, ?, ?, ?)');
+                $query->execute([$creditId, $transactionId, -$creditsToUse, $createdAt]);
                 $remainingAmount -= $creditsToUse;
             }
 

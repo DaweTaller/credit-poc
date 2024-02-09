@@ -93,7 +93,7 @@ function fillTransactions(PDO $pdo, int $numberOfTransactions, int $minCredit, i
                 : null;
 
             try {
-                addTransaction($pdo, $userId, $creditTypeId, $amount);
+                addTransaction($pdo, $userId, $creditTypeId, $amount, $datetimeCreated);
 
                 if ($transactionToProcess !== $numberOfTransactions && $transactionToProcess % 100 === 0) {
                     printProcessedTransactions($transactionToProcess, $numberOfTransactions);

@@ -52,7 +52,7 @@ require_once __DIR__ . '/script/include/functions.php';
 				</div>
 				<div class="form-group col-md-4">
 					<label for="amount">Amount</label>
-					<input name="amount" required type="numeric" class="form-control" id="amount" placeholder="Amount">
+					<input name="amount" required type="number" class="form-control" id="amount" placeholder="Amount">
 				</div>
 			</div>
 			<input type="submit" class="btn btn-primary pull-right" style="margin-right: 15px" name="send" value="Add transaction" />

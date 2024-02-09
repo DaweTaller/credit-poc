@@ -9,7 +9,7 @@ require_once __DIR__ . '/../exception/InactiveCreditTypeException.php';
 
 function getUserCredit(PDO $pdo, int $userId, ?int $creditTypeId = null): ?int {
     $sql = '
-        SELECT SUM(remaining_amount)
+        SELECT SUM(amount)
         FROM credit
         WHERE user_id = ?
           AND (expired_at IS NULL OR expired_at > NOW())
@@ -64,7 +64,7 @@ function isCreditTypeActive(PDO $pdo, int $creditTypeId): bool {
  */
 function getUserCreditsByPriority(PDO $pdo, int $userId): array {
     $query = $pdo->prepare(
-        'SELECT c.id, c.credit_type_id AS creditTypeId, remaining_amount AS amount
+        'SELECT c.id, c.credit_type_id AS creditTypeId, amount
         FROM credit c JOIN credit_type ct ON c.credit_type_id = ct.id
         WHERE c.user_id = ?
           AND (c.expired_at IS NULL OR c.expired_at > NOW())
@@ -127,7 +127,7 @@ function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?
 
         if ($amount > 0) {
             // add credits
-            $query = $pdo->prepare('INSERT INTO credit (user_id, credit_type_id, amount, remaining_amount, created_at, expired_at) VALUES (?, ?, ?, ?, ?, ?)');
+            $query = $pdo->prepare('INSERT INTO credit (user_id, credit_type_id, initial_amount, amount, created_at, expired_at) VALUES (?, ?, ?, ?, ?, ?)');
             $query->execute([$userId, $creditTypeId, $amount, $amount, $createdAt, $expiredAt]);
             $creditId = $pdo->lastInsertId();
             $query = $pdo->prepare('INSERT INTO credit_transaction (credit_id, transaction_id, amount, created_at) VALUES (?, ?, ?, ?)');
@@ -152,7 +152,7 @@ function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?
                 }
 
                 // updated credit
-                $query = $pdo->prepare('UPDATE credit SET remaining_amount = remaining_amount - ?, updated_at = ? WHERE id = ?');
+                $query = $pdo->prepare('UPDATE credit SET amount = amount - ?, updated_at = ? WHERE id = ?');
                 $query->execute([$creditsToUse, $createdAt, $creditId]);
 
                 // insert to credit_transaction

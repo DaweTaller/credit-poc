@@ -3,7 +3,7 @@
 require_once __DIR__ . '/include/functions.php';
 require_once __DIR__ . '/include/db-connection.php';
 
-if (isset($_POST['clear-data'])) {
+if (isset($_POST['reset-data'])) {
     $_GET['no-output'] = true;
     include "data-init.php";
 } else {

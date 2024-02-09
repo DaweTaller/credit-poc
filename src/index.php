@@ -2,8 +2,6 @@
 require_once __DIR__ . '/script/include/db-connection.php';
 require_once __DIR__ . '/script/include/render.php';
 require_once __DIR__ . '/script/include/functions.php';
-
-
 ?>
 
 <html>
@@ -58,6 +56,7 @@ require_once __DIR__ . '/script/include/functions.php';
 				</div>
 			</div>
 			<input type="submit" class="btn btn-primary" name="send" value="Add transaction" />
+			<input type="submit" class="btn btn-primary" name="clear-data" value="Clear data" />
 		</form>
 		<hr>
 		<?php echo renderTable($pdo, 'credit', 'SELECT * FROM credit ORDER BY created_at ASC'); ?>

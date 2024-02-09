@@ -7,9 +7,11 @@ require_once __DIR__ . '/include/user-names.php';
 require_once __DIR__ . '/include/credit-types.php';
 require_once __DIR__ . '/include/functions.php';
 
+$noOutput = isset($_GET['no-output']);
+
 clearAllData($pdo);
-fillCreditTypes($pdo, $creditTypes);
-fillUsers($pdo, intval(getenv('NUMBER_OF_USERS')), $userFirstNames, $userLastNames);
+fillCreditTypes($pdo, $creditTypes, $noOutput);
+fillUsers($pdo, intval(getenv('NUMBER_OF_USERS')), $userFirstNames, $userLastNames, $noOutput);
 
 function clearAllData(PDO $pdo) {
     $pdo->exec('DELETE FROM credit_transaction');
@@ -24,7 +26,7 @@ function clearAllData(PDO $pdo) {
     $pdo->exec('ALTER TABLE user AUTO_INCREMENT = 1');
 }
 
-function fillCreditTypes(PDO $pdo, array $creditTypes) {
+function fillCreditTypes(PDO $pdo, array $creditTypes, bool $noOutput = false) {
 
     foreach ($creditTypes as $creditType) {
         $query = $pdo->prepare('INSERT INTO credit_type (name, expiration_in_days, priority) VALUES (?, ?, ?)');
@@ -37,10 +39,12 @@ function fillCreditTypes(PDO $pdo, array $creditTypes) {
         );
     }
 
-    echo sprintf('Filled %d credit types' . PHP_EOL, count($creditTypes));
+    if (!$noOutput) {
+        echo sprintf('Filled %d credit types' . PHP_EOL, count($creditTypes));
+    }
 }
 
-function fillUsers(PDO $pdo, int $numberOfUsers, array $firstNames, array $lastNames) {
+function fillUsers(PDO $pdo, int $numberOfUsers, array $firstNames, array $lastNames, bool $noOutput = false) {
 
     for ($i = 0; $i < $numberOfUsers; $i++) {
         $firstName = $firstNames[rand(0, count($firstNames) - 1)];
@@ -50,5 +54,7 @@ function fillUsers(PDO $pdo, int $numberOfUsers, array $firstNames, array $lastN
         $query->execute([$firstName, $lastName]);
     }
 
-    echo sprintf('Filled %d users' . PHP_EOL, $numberOfUsers);
+    if (!$noOutput) {
+        echo sprintf('Filled %d users' . PHP_EOL, $numberOfUsers);
+    }
 }

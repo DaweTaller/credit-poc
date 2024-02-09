@@ -25,15 +25,11 @@ DROP TABLE IF EXISTS transaction;
 CREATE TABLE transaction (
     id INT(11) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
     user_id INT(11) UNSIGNED NOT NULL,
-    credit_type_id INT(11) UNSIGNED NOT NULL,
     amount INT(11) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expired_at TIMESTAMP,
-    note TEXT,
     CONSTRAINT fk_credit_audit_log_user_id FOREIGN KEY (user_id)
-        REFERENCES user(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_credit_audit_log_credit_type_id FOREIGN KEY (credit_type_id)
-        REFERENCES credit_type(id) ON DELETE RESTRICT ON UPDATE CASCADE
+        REFERENCES user(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 
 -- credit
@@ -47,7 +43,6 @@ CREATE TABLE credit (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     expired_at TIMESTAMP,
-    note TEXT,
     CONSTRAINT fk_credit_user_id FOREIGN KEY (user_id)
       REFERENCES user(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_credit_credit_type_id FOREIGN KEY (credit_type_id)

@@ -52,12 +52,11 @@ require_once __DIR__ . '/script/include/functions.php';
 				</div>
 				<div class="form-group col-md-4">
 					<label for="amount">Amount</label>
-					<input name="amount" type="numeric" class="form-control" id="amount" placeholder="Amount">
+					<input name="amount" required type="numeric" class="form-control" id="amount" placeholder="Amount">
 				</div>
 			</div>
-			<input type="submit" class="btn btn-primary" name="send" value="Add transaction" />
-
-			<input style="margin-left: 20px" type="submit" class="btn btn-primary" name="reset-data" value="Reset data" />
+			<input type="submit" class="btn btn-primary pull-right" style="margin-right: 15px" name="send" value="Add transaction" />
+			<input type="submit" class="btn btn-danger" style="margin-left: 15px" name="reset-data" value="Reset data" />
 		</form>
 		<hr>
 		<?php echo renderTable($pdo, 'credit', 'SELECT * FROM credit ORDER BY created_at ASC'); ?>

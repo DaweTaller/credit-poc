@@ -40,7 +40,6 @@ CREATE TABLE credit (
     id INT(11) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
     user_id INT(11) UNSIGNED NOT NULL,
     credit_type_id INT(11) UNSIGNED NOT NULL,
-    initial_amount INT(11) NOT NULL COMMENT 'Initial amount when credit was added, do not update',
     amount INT(11) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,

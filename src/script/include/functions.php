@@ -67,7 +67,11 @@ function getCreditTypeExpiration(PDO $pdo, int $creditTypeId, ?DateTimeImmutable
         $expiredAtDateTime = new DateTimeImmutable($result['expirate_at']);
     }
 
-    return $expiredAtDateTime < $expirationInDaysDateTime ? $expiredAtDateTime : $expirationInDaysDateTime;
+    if ($expirationInDaysDateTime !== null && $expiredAtDateTime !== null) {
+        return $expiredAtDateTime < $expirationInDaysDateTime ? $expiredAtDateTime : $expirationInDaysDateTime;
+    }
+
+    return $expiredAtDateTime ?? $expirationInDaysDateTime;
 }
 
 /**
@@ -225,8 +229,8 @@ function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateT
         ]);
 
         $transactionId = $pdo->lastInsertId();
-        $query = $pdo->prepare('INSERT INTO credit (user_id, credit_type_id, initial_amount, amount, created_at, expired_at) VALUES (?, ?, ?, ?, ?, ?)');
-        $query->execute([$userId, $creditTypeId, $amount, $amount, $createdAt, $expiredAt]);
+        $query = $pdo->prepare('INSERT INTO credit (user_id, credit_type_id, amount, created_at, expired_at) VALUES (?, ?, ?, ?, ?)');
+        $query->execute([$userId, $creditTypeId, $amount, $createdAt, $expiredAt]);
         $creditId = $pdo->lastInsertId();
         $query = $pdo->prepare('INSERT INTO transaction_audit (credit_id, transaction_id, amount, created_at) VALUES (?, ?, ?, ?)');
         $query->execute([$creditId, $transactionId, $amount, $createdAt]);

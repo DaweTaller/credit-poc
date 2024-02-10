@@ -82,12 +82,34 @@ if ($userId) {
     );
 
 } else {
+    $data[] = renderSqlResult(
+        $pdo,
+        'Audit log',
+        'SELECT ta.id AS log_id, t.id AS transaction_id, t.type AS transaction_type, ct.name AS credit_type, ta.amount, c.id AS credit_id, ta.created_at, c.expired_at   
+             FROM transaction_audit ta
+             JOIN transaction t ON t.id = ta.transaction_id
+             JOIN credit c ON c.id = ta.credit_id
+             JOIN credit_type ct ON c.credit_type_id = ct.id
+             ORDER BY ta.created_at ASC'
+    );
+
+    $data[] = renderSqlResult(
+        $pdo,
+        'Requests',
+        'SELECT *   
+             FROM request r
+             ORDER BY r.created_at ASC'
+    );
+}
+
+
+if (count(array_filter($data)) === 0) {
     $protocol = $_SERVER['PROTOCOL'] = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) ? "https://" : "http://";
     $redirectUrl = $protocol . $_SERVER['HTTP_HOST'];
 
     echo sprintf(
         '<strong>%s</strong><br><br><a href="%s">Go back</a>',
-        'No data was set in audit form...',
+        'No data found...',
         $redirectUrl
     );
     exit;

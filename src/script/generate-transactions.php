@@ -15,6 +15,8 @@ function clearAllData(PDO $pdo) {
     $pdo->exec('ALTER TABLE transaction_audit AUTO_INCREMENT = 1');
     $pdo->exec('DELETE FROM credit');
     $pdo->exec('ALTER TABLE credit AUTO_INCREMENT = 1');
+    $pdo->exec('DELETE FROM request');
+    $pdo->exec('ALTER TABLE request AUTO_INCREMENT = 1');
     $pdo->exec('DELETE FROM transaction');
     $pdo->exec('ALTER TABLE transaction AUTO_INCREMENT = 1');
 }
@@ -49,11 +51,24 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredi
                 ->setTime(rand(0, 23), rand(0, 59), rand(0, 59));
 
             try {
+                $requestId = generateRequestId();
+                $referrer = getRandomReferrer();
+                $additionalData = [
+                    'requestId' => $requestId,
+                    'referrer' => $referrer,
+                    'userId' => $userId,
+                    'amount' => $amount,
+                    'creditTypeId' => $creditTypeId,
+                ];
+                createTransactionRequest($pdo, $requestId, $userId, $referrer,$amount, $creditTypeId, $additionalData);
+
                 if ($amount > 0) {
-                    addCredit($pdo, $userId, $creditTypeId, $amount, $datetimeCreated);
+                    $transactionId = addCredit($pdo, $userId, $creditTypeId, $amount, $datetimeCreated);
                 } else {
-                    useCredit($pdo, $userId, abs($amount), $datetimeCreated);
+                    $transactionId = useCredit($pdo, $userId, abs($amount), $datetimeCreated);
                 }
+
+                setTransactionIdToRequest($pdo, $requestId, $transactionId);
 
                 if ($transactionToProcess !== $numberOfTransactions && $transactionToProcess % 100 === 0) {
                     printProcessedTransactions($transactionToProcess, $numberOfTransactions);

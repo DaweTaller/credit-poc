@@ -147,3 +147,40 @@ function renderExpireCreditForm() { ?>
         </div>
     </form>
 <?php }
+
+
+function renderAuditLogForm(PDO $pdo) { ?>
+	<form action="script/audit_log.php" method="get">
+		<div class="form-group">
+			<label for="user">User</label>
+			<select name="userId" id="user" class="form-control">
+				<option value=""></option>
+                <?php
+                foreach (getUsers($pdo) as $user) {
+                    echo sprintf(
+                        '<option value="%s">%s</option>',
+                        $user['id'],
+                        sprintf(
+                            '%s %s (id: %s)',
+                            $user['first_name'],
+                            $user['last_name'],
+                            $user['id'],
+                )
+                    );
+                }
+                ?>
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="transactionId">Transaction id</label>
+			<input name="transactionId" min="1" type="number" class="form-control" id="transactionId" placeholder="Transaction id">
+		</div>
+		<div class="form-group">
+			<label for="creditId">Credit Id</label>
+			<input name="creditId" min="1" type="number" class="form-control" id="creditId" placeholder="Credit Id">
+		</div>
+		<div class="form-group">
+			<input type="submit" class="btn btn-primary pull-right" name="audit-log" value="Audit log" />
+		</div>
+	</form>
+<?php }

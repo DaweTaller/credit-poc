@@ -2,7 +2,6 @@
 require_once __DIR__ . '/script/include/db-connection.php';
 require_once __DIR__ . '/script/include/render.php';
 require_once __DIR__ . '/script/include/functions.php';
-require_once __DIR__ . '/script/include/forms.php';
 
 processExpirations($pdo);
 ?>

@@ -18,6 +18,8 @@ function clearAllData(PDO $pdo) {
     $pdo->exec('ALTER TABLE transaction_audit AUTO_INCREMENT = 1');
     $pdo->exec('DELETE FROM credit');
     $pdo->exec('ALTER TABLE credit AUTO_INCREMENT = 1');
+    $pdo->exec('DELETE FROM request');
+    $pdo->exec('ALTER TABLE request AUTO_INCREMENT = 1');
     $pdo->exec('DELETE FROM transaction');
     $pdo->exec('ALTER TABLE transaction AUTO_INCREMENT = 1');
     $pdo->exec('DELETE FROM credit_type');

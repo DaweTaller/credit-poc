@@ -64,3 +64,21 @@ CREATE TABLE transaction_audit (
         REFERENCES transaction(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 
+
+DROP TABLE IF EXISTS request;
+CREATE TABLE request (
+    id INT(11) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    request_id VARCHAR(255) NOT NULL UNIQUE,
+    referrer VARCHAR(255) NOT NULL,
+    user_id INT(11) NOT NULL,
+    amount INT(11) NOT NULL,
+    credit_type_id INT(11) UNSIGNED,
+    transaction_id INT(11) UNSIGNED,
+    additional_data json NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    rollback_at TIMESTAMP,
+    CONSTRAINT fk_request_transaction_id FOREIGN KEY (transaction_id)
+        REFERENCES transaction(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
+

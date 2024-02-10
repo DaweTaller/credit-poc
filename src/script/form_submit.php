@@ -11,9 +11,37 @@ try {
         $_GET['no-output'] = true;
         include "data-init.php";
     } elseif (isset($_POST['add-credit'])) {
-        addCredit($pdo, $_POST['userId'], $_POST['creditTypeId'], $_POST['amount']);
+        $requestId = generateRequestId();
+        $referrer = getRandomReferrer();
+        $userId = $_POST['userId'];
+        $amount = $_POST['amount'];
+        $creditTypeId = $_POST['creditTypeId'];
+        $additionalData = [
+            'requestId' => $requestId,
+            'referrer' => $referrer,
+            'userId' => $userId,
+            'amount' => $amount,
+            'creditTypeId' => $creditTypeId,
+        ];
+
+        createTransactionRequest($pdo, $requestId, $userId, $referrer,$amount, $creditTypeId, $additionalData);
+        $transactionId = addCredit($pdo, $userId, $creditTypeId, $amount);
+        setTransactionIdToRequest($pdo, $requestId, $transactionId);
     } elseif (isset($_POST['use-credit'])) {
-        useCredit($pdo, $_POST['userId'], $_POST['amount']);
+        $requestId = generateRequestId();
+        $referrer = getRandomReferrer();
+        $userId = $_POST['userId'];
+        $amount = $_POST['amount'];
+        $additionalData = [
+            'requestId' => $requestId,
+            'referrer' => $referrer,
+            'userId' => $userId,
+            'amount' => -$amount,
+        ];
+
+        createTransactionRequest($pdo, $requestId, $userId, $referrer, -$amount, null, $additionalData);
+        $transactionId = useCredit($pdo, $userId, $amount);
+        setTransactionIdToRequest($pdo, $requestId, $transactionId);
     } elseif (isset($_POST['expire-credit'])) {
         setExpirationOnCredit($pdo, $_POST['creditId']);
         processExpirations($pdo);

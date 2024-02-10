@@ -125,7 +125,7 @@ function useCredit(
     int $userId,
     int $amount,
     ?DateTimeImmutable $createdAt = null
-) {
+): int {
     if ($amount <= 0) {
         throw new ZeroAmountException('Cant use credits with zero or less amount');
     }
@@ -194,6 +194,8 @@ function useCredit(
 
         throw $e;
     }
+
+    return intval($transactionId);
 }
 
 /**
@@ -203,7 +205,7 @@ function useCredit(
  * @throws InactiveCreditTypeException
  * @throws Exception
  */
-function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null) {
+function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null): int {
     if ($amount <= 0) {
         throw new ZeroAmountException('Cant add credits with zero or less amount');
     }
@@ -241,6 +243,8 @@ function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateT
 
         throw $e;
     }
+
+    return intval($transactionId);
 }
 
 function processExpirations(PDO $pdo, ?int $userId = null) {
@@ -285,4 +289,50 @@ function setExpirationOnCredit(PDO $pdo, int $creditId, DateTimeImmutable $expir
 
     $query = $pdo->prepare('UPDATE credit SET expired_at = ? WHERE id = ?');
     $query->execute([$expiration->format(DATETIME_FORMAT), $creditId]);
+}
+
+function createTransactionRequest(
+    PDO $pdo,
+    string $requestId,
+    int $userId,
+    string $referrer,
+    int $amount,
+    ?int $creditTypeId,
+    array $additionalData
+): void {
+    $query = $pdo->prepare('INSERT INTO request (request_id, user_id, referrer, amount, credit_type_id, additional_data) VALUES (?, ?, ?, ?, ?, ?)');
+    $query->execute([$requestId, $userId, $referrer, $amount, $creditTypeId, json_encode($additionalData)]);
+}
+
+/**
+ * @throws EntityNotFoundException
+ * @throws RequestAlreadyHaveTransaction
+ */
+function setTransactionIdToRequest(PDO $pdo, string $requestId, int $transactionId) {
+    $query = $pdo->prepare('SELECT transaction_id FROM request WHERE request_id = ?');
+    $query->execute([$requestId]);
+    $existingTransactionId = $query->fetchColumn();
+
+    if ($existingTransactionId === false) {
+        throw new EntityNotFoundException(sprintf('Request entity by request id %s not found', $requestId));
+    }
+
+    if ($existingTransactionId !== null) {
+        throw new RequestAlreadyHaveTransaction(sprintf('Request with request id %s already has transaction id %s', $requestId, $transactionId));
+    }
+
+    $query = $pdo->prepare('UPDATE request SET transaction_id = ?, updated_at = ? WHERE request_id = ?');
+    $query->execute([$transactionId, (new DateTimeImmutable())->format(DATETIME_FORMAT), $requestId]);
+}
+
+function generateRequestId(): string {
+    return uniqid();
+}
+
+function getRandomReferrer(): string {
+    $referrers = [
+        'ftmo.com', 'shop.ftmo.com', 'fapi.ftmo.com', 'affiliate.ftmo.com'
+    ];
+
+    return $referrers[rand(0, count($referrers) - 1)];
 }

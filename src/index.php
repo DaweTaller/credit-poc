@@ -52,6 +52,15 @@ processExpirations($pdo);
 					<?php echo renderSqlResult($pdo, 'transaction', 'SELECT * FROM transaction ORDER BY created_at ASC'); ?>
 				</div>
 			</div>
+			<hr>
+			<br>
+			<br>
+			<br>
+			<div class="row">
+				<div class="col-md-12">
+                    <?php echo renderSqlResult($pdo, 'request', 'SELECT * FROM request ORDER BY created_at ASC'); ?>
+				</div>
+			</div>
 		</div>
     </body>
 </html>

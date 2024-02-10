@@ -44,16 +44,29 @@ function getUsers(PDO $pdo): array {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getCreditTypeExpirationInDays(PDO $pdo, int $creditTypeId): ?int {
-    $stmt = $pdo->prepare('SELECT expiration_in_days FROM credit_type WHERE id = ?');
+function getCreditTypeExpiration(PDO $pdo, int $creditTypeId, ?DateTimeImmutable $now = null): ?DateTimeImmutable {
+    $stmt = $pdo->prepare('SELECT expiration_in_days, expirate_at FROM credit_type WHERE id = ?');
     $stmt->execute([$creditTypeId]);
-    $result = $stmt->fetchColumn();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($result === null) {
+    if ($result === null || ($result['expirate_at'] === null && $result['expiration_in_days'] === null)) {
         return null;
     }
 
-    return intval($result);
+
+    $now = $now ?? new DateTimeImmutable();
+    $expirationInDaysDateTime = null;
+    $expiredAtDateTime = null;
+
+    if ($result['expiration_in_days']) {
+        $expirationInDaysDateTime = $now->modify(sprintf('+%d days', $result['expiration_in_days']));
+    }
+
+    if ($result['expirate_at']) {
+        $expiredAtDateTime = new DateTimeImmutable($result['expirate_at']);
+    }
+
+    return $expiredAtDateTime < $expirationInDaysDateTime ? $expiredAtDateTime : $expirationInDaysDateTime;
 }
 
 /**
@@ -190,10 +203,8 @@ function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateT
 
     try {
         $createdAt = $createdAt ?? new DateTimeImmutable();
-        $expiredInDays = getCreditTypeExpirationInDays($pdo, $creditTypeId);
-        $expiredAt = $expiredInDays !== null
-            ? $createdAt->modify(sprintf('+%d days', $expiredInDays))->format(DATETIME_FORMAT)
-            : null;
+        $expiredAt = getCreditTypeExpiration($pdo, $creditTypeId);
+        $expiredAt = $expiredAt !== null ? $expiredAt->format(DATETIME_FORMAT) : null;
         $createdAt = $createdAt->format(DATETIME_FORMAT);
         $query = $pdo->prepare('INSERT INTO transaction (user_id, amount, created_at, expired_at) VALUES (?, ?, ?, ?)');
         $query->execute([
@@ -202,6 +213,7 @@ function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateT
             $createdAt,
             $expiredAt
         ]);
+
         $transactionId = $pdo->lastInsertId();
         $query = $pdo->prepare('INSERT INTO credit (user_id, credit_type_id, initial_amount, amount, created_at, expired_at) VALUES (?, ?, ?, ?, ?, ?)');
         $query->execute([$userId, $creditTypeId, $amount, $amount, $createdAt, $expiredAt]);

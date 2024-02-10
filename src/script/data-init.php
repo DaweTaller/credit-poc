@@ -29,11 +29,12 @@ function clearAllData(PDO $pdo) {
 function fillCreditTypes(PDO $pdo, array $creditTypes, bool $noOutput = false) {
 
     foreach ($creditTypes as $creditType) {
-        $query = $pdo->prepare('INSERT INTO credit_type (name, expiration_in_days, priority) VALUES (?, ?, ?)');
+        $query = $pdo->prepare('INSERT INTO credit_type (name, expiration_in_days, expirate_at, priority) VALUES (?, ?, ?, ?)');
         $query->execute(
             [
                 $creditType['name'],
                 $creditType['expiration'],
+                $creditType['expirate_at'] !== null ? $creditType['expirate_at']->format(DATETIME_FORMAT) : null,
                 $creditType['priority']
             ]
         );

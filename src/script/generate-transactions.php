@@ -34,8 +34,6 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredi
     while ($transactionToProcess > 0) {
         $userId = rand(1, $maxUserId);
         $creditTypeId = rand(1, $maxCreditTypeId);
-
-        $creditExpirationInDays = getCreditTypeExpirationInDays($pdo, $creditTypeId);
         $userCredit = getUserCredit($pdo, $userId, $creditTypeId);
         $amount = $userCredit === 0
             ? rand(0, $maxCredit)
@@ -45,9 +43,6 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredi
             $datetimeCreated = (new DateTimeImmutable())
                 ->modify('-' . rand(0, 365 * 2) . ' day')
                 ->setTime(rand(0, 23), rand(0, 59), rand(0, 59));
-            $expiredAt = $creditExpirationInDays !== null
-                ? $datetimeCreated->modify('+ ' . $creditExpirationInDays . ' day')
-                : null;
 
             try {
                 if ($amount > 0) {

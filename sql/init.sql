@@ -16,6 +16,7 @@ CREATE TABLE credit_type (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     expiration_in_days SMALLINT UNSIGNED,
+    expirate_at TIMESTAMP,
     priority SMALLINT NOT NULL COMMENT "Priority in which is credits used. 1 for first use.",
     active ENUM('yes', 'no') DEFAULT 'yes' NOT NULL
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;

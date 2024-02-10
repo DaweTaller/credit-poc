@@ -35,15 +35,25 @@ function renderAddCreditForm(PDO $pdo) { ?>
             <select name="creditTypeId" id="creditType" class="form-control">
                 <?php
                 foreach (getCreditTypes($pdo) as $creditType) {
-                    echo sprintf(
-                        '<option value="%s">%s</option>',
-                        $creditType['id'],
-                        sprintf(
-                            '%s%s',
-                            $creditType['name'],
-                            $creditType['expiration_in_days'] !== null
-                                ? ' (expiration: ' . $creditType['expiration_in_days'] . ' days)' : '')
-                    );
+					$expirationInDaysString = $creditType['expiration_in_days']
+						? sprintf('%d days', $creditType['expiration_in_days'])
+						: null;
+                    $expiredAtString = $creditType['expirate_at']
+                        ? $creditType['expirate_at']
+                        : null;
+					$hasExpiration = $expiredAtString !== null || $expirationInDaysString !== null;
+					$optionString = sprintf(
+                        '%s%s',
+                        $creditType['name'],
+                        $hasExpiration ?
+                            sprintf(
+                                '(expiration: %s%s)',
+                                $expirationInDaysString,
+                                $expiredAtString !== null ? ' or ' . $expiredAtString : ''
+                            ) : '',
+					);
+
+                    echo sprintf('<option value="%s">%s</option>', $creditType['id'], $optionString);
                 }
                 ?>
             </select>

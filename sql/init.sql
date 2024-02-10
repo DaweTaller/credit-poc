@@ -20,7 +20,7 @@ CREATE TABLE credit_type (
     active ENUM('yes', 'no') DEFAULT 'yes' NOT NULL
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 
--- credit audit log
+-- transaction
 DROP TABLE IF EXISTS transaction;
 CREATE TABLE transaction (
     id INT(11) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
@@ -49,17 +49,17 @@ CREATE TABLE credit (
       REFERENCES credit_type(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 
--- credit_transaction
-DROP TABLE IF EXISTS credit_transaction;
-CREATE TABLE credit_transaction (
+-- transaction_audit
+DROP TABLE IF EXISTS transaction_audit;
+CREATE TABLE transaction_audit (
     id INT(11) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
     credit_id INT(11) UNSIGNED NOT NULL,
     transaction_id INT(11) UNSIGNED NOT NULL,
     amount INT(11) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_credit_transaction_credit_id FOREIGN KEY (credit_id)
+    CONSTRAINT fk_transaction_audit_credit_id FOREIGN KEY (credit_id)
         REFERENCES credit(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_credit_transaction_transaction_id FOREIGN KEY (transaction_id)
+    CONSTRAINT fk_transaction_audit_transaction_id FOREIGN KEY (transaction_id)
         REFERENCES transaction(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 

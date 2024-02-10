@@ -11,8 +11,8 @@ clearAllData($pdo);
 generateTransactions($pdo, intval(getenv('NUMBER_OF_TRANSACTIONS')), intval(getenv('MIN_CREDIT')), intval(getenv('MAX_CREDIT')));
 
 function clearAllData(PDO $pdo) {
-    $pdo->exec('DELETE FROM credit_transaction');
-    $pdo->exec('ALTER TABLE credit_transaction AUTO_INCREMENT = 1');
+    $pdo->exec('DELETE FROM transaction_audit');
+    $pdo->exec('ALTER TABLE transaction_audit AUTO_INCREMENT = 1');
 }
 
 /**
@@ -50,7 +50,11 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredi
                 : null;
 
             try {
-                addTransaction($pdo, $userId, $creditTypeId, $amount, $datetimeCreated);
+                if ($amount > 0) {
+                    addCredit($pdo, $userId, $creditTypeId, $amount, $datetimeCreated);
+                } else {
+                    useCredit($pdo, $userId, $amount, $datetimeCreated);
+                }
 
                 if ($transactionToProcess !== $numberOfTransactions && $transactionToProcess % 100 === 0) {
                     printProcessedTransactions($transactionToProcess, $numberOfTransactions);

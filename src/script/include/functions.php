@@ -104,23 +104,9 @@ function getUserCreditsByPriority(PDO $pdo, int $userId): array {
  * @throws InactiveCreditTypeException
  * @throws EntityNotFoundException
  */
-function addTransaction(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null) {
-    if ($amount > 0) {
-        addCredits($pdo, $userId, $creditTypeId, $amount, $createdAt);
-    } else {
-        useCredits($pdo, $userId, $amount, $createdAt);
-    }
-}
-
-/**
- * @throws ZeroAmountException
- * @throws NotEnoughtCreditsException
- * @throws InactiveCreditTypeException
- * @throws EntityNotFoundException
- */
-function useCredits(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $createdAt = null) {
-    if ($amount >= 0) {
-        throw new ZeroAmountException('Cant add use credits with zero or more amount');
+function useCredit(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $createdAt = null) {
+    if ($amount <= 0) {
+        throw new ZeroAmountException('Cant use credits with zero or less amount');
     }
 
     $pdo->beginTransaction();
@@ -128,7 +114,7 @@ function useCredits(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $crea
     try {
         $userCredit = getUserCredit($pdo, $userId);
 
-        if ($userCredit < abs($amount)) {
+        if ($userCredit < $amount) {
             throw new NotEnoughtCreditsException(sprintf('User %d does not have amount %d.', $userId, abs($amount)));
         }
 
@@ -138,13 +124,13 @@ function useCredits(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $crea
         $query = $pdo->prepare('INSERT INTO transaction (user_id, amount, created_at) VALUES (?, ?, ?)');
         $query->execute([
             $userId,
-            $amount,
+            -$amount,
             $createdAt,
         ]);
         $transactionId = $pdo->lastInsertId();
 
         $credits = getUserCreditsByPriority($pdo, $userId);
-        $remainingAmount = abs($amount);
+        $remainingAmount = $amount;
 
         foreach ($credits as $credit) {
             if ($remainingAmount <= 0) {
@@ -163,8 +149,8 @@ function useCredits(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $crea
             // updated credit
             $query = $pdo->prepare('UPDATE credit SET amount = amount - ?, updated_at = ? WHERE id = ?');
             $query->execute([$creditsToUse, $createdAt, $creditId]);
-            // insert to credit_transaction
-            $query = $pdo->prepare('INSERT INTO credit_transaction (credit_id, transaction_id, amount, created_at) VALUES (?, ?, ?, ?)');
+            // insert to transaction_audit
+            $query = $pdo->prepare('INSERT INTO transaction_audit (credit_id, transaction_id, amount, created_at) VALUES (?, ?, ?, ?)');
             $query->execute([$creditId, $transactionId, -$creditsToUse, $createdAt]);
             $remainingAmount -= $creditsToUse;
         }
@@ -188,7 +174,7 @@ function useCredits(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $crea
  * @throws InactiveCreditTypeException
  * @throws Exception
  */
-function addCredits(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null) {
+function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null) {
     if ($amount <= 0) {
         throw new ZeroAmountException('Cant add credits with zero or less amount');
     }
@@ -217,7 +203,7 @@ function addCredits(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?Date
         $query = $pdo->prepare('INSERT INTO credit (user_id, credit_type_id, initial_amount, amount, created_at, expired_at) VALUES (?, ?, ?, ?, ?, ?)');
         $query->execute([$userId, $creditTypeId, $amount, $amount, $createdAt, $expiredAt]);
         $creditId = $pdo->lastInsertId();
-        $query = $pdo->prepare('INSERT INTO credit_transaction (credit_id, transaction_id, amount, created_at) VALUES (?, ?, ?, ?)');
+        $query = $pdo->prepare('INSERT INTO transaction_audit (credit_id, transaction_id, amount, created_at) VALUES (?, ?, ?, ?)');
         $query->execute([$creditId, $transactionId, $amount, $createdAt]);
 
         $pdo->commit();

@@ -14,8 +14,8 @@ fillCreditTypes($pdo, $creditTypes, $noOutput);
 fillUsers($pdo, intval(getenv('NUMBER_OF_USERS')), $userFirstNames, $userLastNames, $noOutput);
 
 function clearAllData(PDO $pdo) {
-    $pdo->exec('DELETE FROM credit_transaction');
-    $pdo->exec('ALTER TABLE credit_transaction AUTO_INCREMENT = 1');
+    $pdo->exec('DELETE FROM transaction_audit');
+    $pdo->exec('ALTER TABLE transaction_audit AUTO_INCREMENT = 1');
     $pdo->exec('DELETE FROM credit');
     $pdo->exec('ALTER TABLE credit AUTO_INCREMENT = 1');
     $pdo->exec('DELETE FROM transaction');

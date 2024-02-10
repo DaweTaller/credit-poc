@@ -20,6 +20,6 @@ GROUP BY user_id, credit_type_id
 ORDER BY user_id ASC;
 
 -- get outcome transaction with payed by more credit types
-SET @transactionId = (SELECT transaction_id FROM credit_transaction ct GROUP BY transaction_id HAVING COUNT(transaction_id) > 2 LIMIT 1);
+SET @transactionId = (SELECT transaction_id FROM transaction_audit ct GROUP BY transaction_id HAVING COUNT(transaction_id) > 2 LIMIT 1);
 SELECT * FROM transaction WHERE id = @transactionId;
-SELECT * FROM credit_transaction WHERE transaction_id = @transactionId;
+SELECT * FROM transaction_audit WHERE transaction_id = @transactionId;

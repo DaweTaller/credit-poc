@@ -4,6 +4,8 @@ DC?=docker-compose
 DM?=$(DC) exec -T db
 DP?=$(DC) exec -T php-fpm
 
+start: up init
+
 up:
 	$(DC) up -d --remove-orphans
 down:

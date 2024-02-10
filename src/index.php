@@ -2,6 +2,7 @@
 require_once __DIR__ . '/script/include/db-connection.php';
 require_once __DIR__ . '/script/include/render.php';
 require_once __DIR__ . '/script/include/functions.php';
+require_once __DIR__ . '/script/include/forms.php';
 ?>
 
 <html>
@@ -10,61 +11,42 @@ require_once __DIR__ . '/script/include/functions.php';
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     </header>
 	<body>
-		<h2>Add transaction</h2>
-		<form action="script/form_submit.php" method="post">
-			<div class="form-row">
-				<div class="form-group col-md-4">
-					<label for="user">User</label>
-					<select name="userId" id="user" class="form-control">
-                        <?php
-                        foreach (getUsers($pdo) as $user) {
-                            echo sprintf(
-                                '<option value="%s">%s</option>',
-                                $user['id'],
-                                sprintf(
-                                    '%s %s (id: %s)',
-                                    $user['first_name'],
-                                    $user['last_name'],
-                                    $user['id'],
-								)
-                            );
-                        }
-                        ?>
-					</select>
-				</div>
-				<div class="form-group col-md-4">
-					<label for="creditType">Credit type</label>
-					<select name="creditTypeId" id="creditType" class="form-control">
-						<?php
-							foreach (getCreditTypes($pdo) as $creditType) {
-								echo sprintf(
-									'<option value="%s">%s</option>',
-									$creditType['id'],
-									sprintf(
-											'%s%s',
-											$creditType['name'],
-												$creditType['expiration_in_days'] !== null
-													? ' (expiration: ' . $creditType['expiration_in_days'] . ' days)' : '')
-								);
-							}
-						?>
-					</select>
-				</div>
-				<div class="form-group col-md-4">
-					<label for="amount">Amount</label>
-					<input name="amount" required type="number" class="form-control" id="amount" placeholder="Amount">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12">
+					<br>
+					<?php renderResetDataForm() ?>
 				</div>
 			</div>
-			<input type="submit" class="btn btn-primary pull-right" style="margin-right: 15px" name="send" value="Add transaction" />
-			<input type="submit" class="btn btn-danger" style="margin-left: 15px" name="reset-data" value="Reset data" />
-		</form>
-		<hr>
-		<?php echo renderTable($pdo, 'credit', 'SELECT * FROM credit ORDER BY created_at ASC'); ?>
-		<hr>
-		<?php echo renderTable($pdo, 'transaction', 'SELECT * FROM transaction ORDER BY created_at ASC'); ?>
-		<hr>
-		<?php echo renderTable($pdo, 'credit_transaction', 'SELECT * FROM credit_transaction ORDER BY created_at ASC'); ?>
-		<hr>
-		<?php echo renderTable($pdo, 'credit_type', 'SELECT * FROM credit_type ORDER BY created_at ASC'); ?>
+			<div class="row">
+				<div class="col-md-6">
+					<h2>Add credit</h2>
+					<?php renderAddCreditForm($pdo) ?>
+				</div>
+				<div class="col-md-6">
+					<h2>Use credit</h2>
+                    <?php renderUseCreditForm($pdo) ?>
+				</div>
+			</div>
+
+			<hr>
+			<div class="row">
+				<div class="col-md-6">
+					<?php echo renderSqlResult($pdo, 'credit', 'SELECT * FROM credit ORDER BY created_at ASC'); ?>
+				</div>
+				<div class="col-md-6">
+					<?php echo renderSqlResult($pdo, 'credit_type', 'SELECT * FROM credit_type ORDER BY created_at ASC'); ?>
+				</div>
+			</div>
+			<hr>
+			<div class="row">
+				<div class="col-md-6">
+					<?php echo renderSqlResult($pdo, 'transaction_audit', 'SELECT * FROM transaction_audit ORDER BY created_at ASC'); ?>
+				</div>
+				<div class="col-md-6">
+					<?php echo renderSqlResult($pdo, 'transaction', 'SELECT * FROM transaction ORDER BY created_at ASC'); ?>
+				</div>
+			</div>
+		</div>
     </body>
 </html>

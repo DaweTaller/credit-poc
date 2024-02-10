@@ -150,7 +150,7 @@ function renderExpireCreditForm() { ?>
 
 
 function renderAuditLogForm(PDO $pdo) { ?>
-	<form action="script/audit_log.php" method="get">
+	<form action="audit_log.php" method="get">
 		<div class="form-group">
 			<label for="user">User</label>
 			<select name="userId" id="user" class="form-control">
@@ -180,7 +180,7 @@ function renderAuditLogForm(PDO $pdo) { ?>
 			<input name="creditId" min="1" type="number" class="form-control" id="creditId" placeholder="Credit Id">
 		</div>
 		<div class="form-group">
-			<input type="submit" class="btn btn-primary pull-right" name="audit-log" value="Audit log" />
+			<input type="submit" class="btn btn-primary pull-right" name="audit-log" value="Show audit" />
 		</div>
 	</form>
 <?php }

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/include/db-connection.php';
-require_once __DIR__ . '/include/functions.php';
-require_once __DIR__ . '/include/render.php';
+require_once __DIR__ . '/script/include/db-connection.php';
+require_once __DIR__ . '/script/include/functions.php';
+require_once __DIR__ . '/script/include/render.php';
 
 processExpirations($pdo);
 
@@ -124,6 +124,11 @@ if (count(array_filter($data)) === 0) {
 </header>
 <body>
     <div class="container-fluid">
+		<div class="row">
+			<div class="col-md-4">
+				<?php echo renderAuditLogForm($pdo); ?>
+			</div>
+		</div>
         <div class="row">
 			<?php foreach ($data as $item) { ?>
                 <div class="col-md-12">

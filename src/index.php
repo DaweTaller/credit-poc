@@ -3,6 +3,8 @@ require_once __DIR__ . '/script/include/db-connection.php';
 require_once __DIR__ . '/script/include/render.php';
 require_once __DIR__ . '/script/include/functions.php';
 require_once __DIR__ . '/script/include/forms.php';
+
+processExpirations($pdo);
 ?>
 
 <html>
@@ -19,13 +21,17 @@ require_once __DIR__ . '/script/include/forms.php';
 				</div>
 			</div>
 			<div class="row">
-				<div class="col-md-6">
+				<div class="col-md-4">
 					<h2>Add credit</h2>
 					<?php renderAddCreditForm($pdo) ?>
 				</div>
-				<div class="col-md-6">
+				<div class="col-md-4">
 					<h2>Use credit</h2>
                     <?php renderUseCreditForm($pdo) ?>
+				</div>
+				<div class="col-md-4">
+					<h2>Expire credit</h2>
+                    <?php renderExpireCreditForm($pdo) ?>
 				</div>
 			</div>
 

@@ -98,3 +98,15 @@ function renderUseCreditForm(PDO $pdo) { ?>
         </div>
     </form>
 <?php }
+
+function renderExpireCreditForm(PDO $pdo) { ?>
+	<form action="script/form_submit.php" method="post">
+		<div class="form-group">
+			<label for="creditId">Credit Id</label>
+			<input name="creditId" min="1" required type="number" class="form-control" id="creditId" placeholder="Credit Id">
+		</div>
+		<div class="form-group">
+			<input type="submit" class="btn btn-primary pull-right" name="expire-credit" value="Expire credit" />
+		</div>
+	</form>
+<?php }

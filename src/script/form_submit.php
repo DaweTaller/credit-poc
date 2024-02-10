@@ -14,6 +14,9 @@ try {
         addCredit($pdo, $_POST['userId'], $_POST['creditTypeId'], $_POST['amount']);
     } elseif (isset($_POST['use-credit'])) {
         useCredit($pdo, $_POST['userId'], $_POST['amount']);
+    } elseif (isset($_POST['expire-credit'])) {
+        setExpirationOnCredit($pdo, $_POST['creditId']);
+        processExpirations($pdo);
     }
 } catch (NotEnoughtCreditsException | ZeroAmountException | InactiveCreditTypeException $e) {
     echo sprintf(

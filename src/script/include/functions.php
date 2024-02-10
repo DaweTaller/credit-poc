@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../exception/NotEnoughtCreditsException.php';
 require_once __DIR__ . '/../../exception/ZeroAmountException.php';
 require_once __DIR__ . '/../../exception/EntityNotFoundException.php';
 require_once __DIR__ . '/../../exception/InactiveCreditTypeException.php';
+require_once __DIR__ . '/../../enum/TransactionTypeEnum.php';
 
 const DATETIME_FORMAT = 'Y-m-d H:i:s';
 
@@ -115,10 +116,17 @@ function getUserCreditsByPriority(PDO $pdo, int $userId): array {
  * @throws ZeroAmountException
  * @throws NotEnoughtCreditsException
  */
-function useCredit(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $createdAt = null) {
+function useCredit(
+    PDO $pdo,
+    int $userId,
+    int $amount,
+    ?DateTimeImmutable $createdAt = null
+) {
     if ($amount <= 0) {
         throw new ZeroAmountException('Cant use credits with zero or less amount');
     }
+
+    processExpirations($pdo, $userId);
 
     $pdo->beginTransaction();
 
@@ -137,10 +145,11 @@ function useCredit(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $creat
         $createdAt = $createdAt ?? new DateTimeImmutable();
         $createdAt = $createdAt->format(DATETIME_FORMAT);
 
-        $query = $pdo->prepare('INSERT INTO transaction (user_id, amount, created_at) VALUES (?, ?, ?)');
+        $query = $pdo->prepare('INSERT INTO transaction (user_id, amount, type, created_at) VALUES (?, ?, ?, ?)');
         $query->execute([
             $userId,
             -$amount,
+            TransactionTypeEnum::ACCOUNT_MOVEMENT->value,
             $createdAt,
         ]);
         $transactionId = $pdo->lastInsertId();
@@ -206,10 +215,11 @@ function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateT
         $expiredAt = getCreditTypeExpiration($pdo, $creditTypeId);
         $expiredAt = $expiredAt !== null ? $expiredAt->format(DATETIME_FORMAT) : null;
         $createdAt = $createdAt->format(DATETIME_FORMAT);
-        $query = $pdo->prepare('INSERT INTO transaction (user_id, amount, created_at, expired_at) VALUES (?, ?, ?, ?)');
+        $query = $pdo->prepare('INSERT INTO transaction (user_id, amount, type, created_at, expired_at) VALUES (?, ?, ?, ?, ?)');
         $query->execute([
             $userId,
             $amount,
+            TransactionTypeEnum::ACCOUNT_MOVEMENT->value,
             $createdAt,
             $expiredAt
         ]);
@@ -227,4 +237,48 @@ function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateT
 
         throw $e;
     }
+}
+
+function processExpirations(PDO $pdo, ?int $userId = null) {
+    // TODO: OR SUM on transaction_audit
+    $sql = "SELECT id, user_id, amount FROM credit WHERE expired_at <= NOW() AND amount > 0";
+
+    $parameters = [];
+    if ($userId !== null) {
+        $sql .= ' AND user_id = ?';
+        $parameters[] = $userId;
+    }
+
+    $query = $pdo->prepare($sql);
+    $query->execute($parameters);
+    $results = $query->fetchAll(PDO::FETCH_ASSOC);
+    $createdAt = (new DateTimeImmutable())->format(DATETIME_FORMAT);
+
+    foreach ($results as $result) {
+        $pdo->beginTransaction();
+            $creditId = $result['id'];
+            $amount = $result['amount'];
+            $userId = $result['user_id'];
+            $query = $pdo->prepare('INSERT INTO transaction (user_id, amount, type, created_at) VALUES (?, ?, ?, ?)');
+            $query->execute([
+                $userId,
+                -$amount,
+                TransactionTypeEnum::CREDIT_EXPIRATION->value,
+                $createdAt,
+            ]);
+            $transactionId = $pdo->lastInsertId();
+
+            $query = $pdo->prepare('UPDATE credit SET amount = 0, updated_at = ? WHERE id = ?');
+            $query->execute([$createdAt, $creditId]);
+            $query = $pdo->prepare('INSERT INTO transaction_audit (credit_id, transaction_id, amount, created_at) VALUES (?, ?, ?, ?)');
+            $query->execute([$creditId, $transactionId, -$amount, $createdAt]);
+        $pdo->commit();
+    }
+}
+
+function setExpirationOnCredit(PDO $pdo, int $creditId, DateTimeImmutable $expiration = null) {
+    $expiration = $expiration ?? new DateTimeImmutable();
+
+    $query = $pdo->prepare('UPDATE credit SET expired_at = ? WHERE id = ?');
+    $query->execute([$expiration->format(DATETIME_FORMAT), $creditId]);
 }

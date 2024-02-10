@@ -99,7 +99,7 @@ function renderUseCreditForm(PDO $pdo) { ?>
     </form>
 <?php }
 
-function renderExpireCreditForm(PDO $pdo) { ?>
+function renderExpireCreditForm() { ?>
 	<form action="script/form_submit.php" method="post">
 		<div class="form-group">
 			<label for="creditId">Credit Id</label>

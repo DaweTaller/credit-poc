@@ -31,7 +31,7 @@ processExpirations($pdo);
 				</div>
 				<div class="col-md-4">
 					<h2>Expire credit</h2>
-                    <?php renderExpireCreditForm($pdo) ?>
+                    <?php renderExpireCreditForm() ?>
 				</div>
 			</div>
 

@@ -101,8 +101,6 @@ function getUserCreditsByPriority(PDO $pdo, int $userId): array {
 /**
  * @throws ZeroAmountException
  * @throws NotEnoughtCreditsException
- * @throws InactiveCreditTypeException
- * @throws EntityNotFoundException
  */
 function useCredit(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $createdAt = null) {
     if ($amount <= 0) {
@@ -115,7 +113,12 @@ function useCredit(PDO $pdo, int $userId, int $amount, ?DateTimeImmutable $creat
         $userCredit = getUserCredit($pdo, $userId);
 
         if ($userCredit < $amount) {
-            throw new NotEnoughtCreditsException(sprintf('User %d does not have amount %d.', $userId, abs($amount)));
+            throw new NotEnoughtCreditsException(sprintf(
+                'User %d does not have %d credits. User has only %d.',
+                $userId,
+                $amount,
+                $userCredit
+            ));
         }
 
         $createdAt = $createdAt ?? new DateTimeImmutable();

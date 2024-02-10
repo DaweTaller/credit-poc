@@ -38,7 +38,7 @@ function renderSqlResult(PDO $pdo, string $name, string $sql): string {
 
 
 function renderResetDataForm() { ?>
-    <form action="script/form_submit.php" method="post">
+    <form action="script/form-submit.php" method="post">
         <div class="form-group">
             <input type="submit" class="btn btn-danger" formnovalidate name="reset-data" value="Reset data" />
         </div>
@@ -46,8 +46,25 @@ function renderResetDataForm() { ?>
 
 <?php }
 
+function renderGoToUseCasesForm() { ?>
+	<form action="use-cases.php" method="post">
+		<div class="form-group">
+			<input type="submit" class="btn btn-primary" formnovalidate name="go-to-use-cases" value="Go to use-cases" />
+		</div>
+	</form>
+
+<?php }
+function renderGoToAuditLogForm() { ?>
+	<form action="audit-log.php" method="post">
+		<div class="form-group">
+			<input type="submit" class="btn btn-primary" formnovalidate name="go-to-audit-log" value="Go to audit-log" />
+		</div>
+	</form>
+
+<?php }
+
 function renderAddCreditForm(PDO $pdo) { ?>
-    <form action="script/form_submit.php" method="post">
+    <form action="script/form-submit.php" method="post">
         <div class="form-group">
             <label for="user">User</label>
             <select name="userId" id="user" class="form-control">
@@ -106,7 +123,7 @@ function renderAddCreditForm(PDO $pdo) { ?>
 <?php }
 
 function renderUseCreditForm(PDO $pdo) { ?>
-    <form action="script/form_submit.php" method="post">
+    <form action="script/form-submit.php" method="post">
         <div class="form-group">
             <label for="user">User</label>
             <select name="userId" id="user" class="form-control">
@@ -150,7 +167,7 @@ function renderExpireCreditForm() { ?>
 
 
 function renderAuditLogForm(PDO $pdo) { ?>
-	<form action="audit_log.php" method="get">
+	<form action="audit-log.php" method="get">
 		<div class="form-group">
 			<label for="user">User</label>
 			<select name="userId" id="user" class="form-control">

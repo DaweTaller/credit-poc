@@ -95,7 +95,8 @@ $useCases[] = [
     'data' => renderSqlResult($pdo, '', $sql)
 ];
 
-
+$protocol = $_SERVER['PROTOCOL'] = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) ? "https://" : "http://";
+$redirectUrl = $protocol . $_SERVER['HTTP_HOST'];
 
 ?>
 
@@ -106,6 +107,11 @@ $useCases[] = [
 </header>
 <body>
     <div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12">
+                <?php echo sprintf('<br><a href="%s">Go back</a><br><br>', $redirectUrl);?>
+			</div>
+		</div>
         <div class="row">
 			<h2>Use-cases</h2>
 			<?php foreach ($useCases as $i => $useCase) { ?>

@@ -20,6 +20,13 @@ processExpirations($pdo);
 				</div>
 			</div>
 			<div class="row">
+				<div class="col-sm-12">
+					<br>
+                    <?php renderGoToUseCasesForm(); ?>
+                    <?php renderGoToAuditLogForm(); ?>
+				</div>
+			</div>
+			<div class="row">
 				<div class="col-md-3">
 					<h2>Add credit</h2>
 					<?php renderAddCreditForm($pdo) ?>

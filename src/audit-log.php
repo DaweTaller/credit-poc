@@ -102,18 +102,8 @@ if ($userId) {
     );
 }
 
-
-if (count(array_filter($data)) === 0) {
-    $protocol = $_SERVER['PROTOCOL'] = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) ? "https://" : "http://";
-    $redirectUrl = $protocol . $_SERVER['HTTP_HOST'];
-
-    echo sprintf(
-        '<strong>%s</strong><br><br><a href="%s">Go back</a>',
-        'No data found...',
-        $redirectUrl
-    );
-    exit;
-}
+$protocol = $_SERVER['PROTOCOL'] = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) ? "https://" : "http://";
+$redirectUrl = $protocol . $_SERVER['HTTP_HOST'];
 
 ?>
 
@@ -125,16 +115,30 @@ if (count(array_filter($data)) === 0) {
 <body>
     <div class="container-fluid">
 		<div class="row">
+			<div class="col-md-12">
+                <?php echo sprintf('<br><a href="%s">Go back</a><br><br>', $redirectUrl);?>
+			</div>
+		</div>
+		<div class="row">
 			<div class="col-md-4">
 				<?php echo renderAuditLogForm($pdo); ?>
 			</div>
 		</div>
         <div class="row">
-			<?php foreach ($data as $item) { ?>
-                <div class="col-md-12">
-                    <?php echo $item ?>
-                </div>
-			<?php } ?>
+			<?php
+				if (count(array_filter($data)) === 0) {
+					echo sprintf(
+						'<strong>%s</strong><br><br>',
+						'No data found...',
+					);
+				} else {
+					foreach ($data as $item) {
+						echo '<div class="col-md-12">';
+							echo $item;
+						echo '</div>';
+					}
+				}
+			?>
         </div>
     </div>
 </body>

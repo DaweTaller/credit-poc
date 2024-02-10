@@ -80,6 +80,21 @@ $useCases[] = [
     'data' => renderSqlResult($pdo, '', $sql)
 ];
 
+// getUsable credit by priority
+if ($userId) {
+    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::CREDIT_EXPIRATION->value . '\'';
+} else {
+    $sql = 'SELECT c.user_id, c.id AS credit_id, ct.priority, ct.name AS creditType, c.created_at, c.expired_at, amount
+        FROM credit c JOIN credit_type ct ON c.credit_type_id = ct.id
+        WHERE (c.expired_at IS NULL OR c.expired_at > NOW()) AND amount > 0
+        ORDER BY c.user_id, ct.priority, c.expired_at, c.created_at ASC';
+}
+$useCases[] = [
+    'name' => 'Usable credits by priority',
+    'sql' => $sql,
+    'data' => renderSqlResult($pdo, '', $sql)
+];
+
 
 
 ?>

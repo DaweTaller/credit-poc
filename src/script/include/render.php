@@ -66,7 +66,7 @@ function renderGoToAuditLogForm() { ?>
 function renderAddCreditForm(PDO $pdo) { ?>
     <form action="script/form-submit.php" method="post">
         <div class="form-group">
-            <label for="user">User</label>
+            <label for="user">User*</label>
             <select name="userId" id="user" class="form-control">
                 <?php
                 foreach (getUsers($pdo) as $user) {
@@ -85,7 +85,7 @@ function renderAddCreditForm(PDO $pdo) { ?>
             </select>
         </div>
         <div class="form-group">
-            <label for="creditType">Credit type</label>
+            <label for="creditType">Credit type*</label>
             <select name="creditTypeId" id="creditType" class="form-control">
                 <?php
                 foreach (getCreditTypes($pdo) as $creditType) {
@@ -114,9 +114,13 @@ function renderAddCreditForm(PDO $pdo) { ?>
             </select>
         </div>
         <div class="form-group">
-            <label for="amount">Amount</label>
+            <label for="amount">Amount*</label>
             <input name="amount" min="1" required type="number" class="form-control" id="amount" placeholder="Amount">
         </div>
+		<div class="form-group">
+			<label for="validFrom">Valid from</label>
+			<input name="validFrom" type="datetime-local" class="form-control" id="validFrom" placeholder="Valid from">
+		</div>
         <div class="form-group">
             <input type="submit" class="btn btn-primary pull-right" name="add-credit" value="Add credit" />
         </div>
@@ -126,7 +130,7 @@ function renderAddCreditForm(PDO $pdo) { ?>
 function renderUseCreditForm(PDO $pdo) { ?>
     <form action="script/form-submit.php" method="post">
         <div class="form-group">
-            <label for="user">User</label>
+            <label for="user">User*</label>
             <select name="userId" id="user" class="form-control">
                 <?php
                 foreach (getUsers($pdo) as $user) {
@@ -145,7 +149,7 @@ function renderUseCreditForm(PDO $pdo) { ?>
             </select>
         </div>
         <div class="form-group">
-            <label for="amount">Amount</label>
+            <label for="amount">Amount*</label>
             <input name="amount" min="1" required type="number" class="form-control" id="amount" placeholder="Amount">
         </div>
         <div class="form-group">
@@ -157,7 +161,7 @@ function renderUseCreditForm(PDO $pdo) { ?>
 function renderExpireCreditForm() { ?>
     <form action="script/form-submit.php" method="post">
         <div class="form-group">
-            <label for="creditId">Credit Id</label>
+            <label for="creditId">Credit Id*</label>
             <input name="creditId" min="1" required type="number" class="form-control" id="creditId" placeholder="Credit Id">
         </div>
         <div class="form-group">
@@ -206,16 +210,16 @@ function renderAuditLogForm(PDO $pdo) { ?>
 function renderAddTransactionsForm(PDO $pdo) { ?>
 	<form action="script/form-submit.php" method="post" class="form-inline">
 		<div class="form-group mb-2">
-			<label for="transactionsCount">Count</label>
-			<input name="transactionsCount" step="1" min="1" type="number" class="form-control" id="transactionsCount" placeholder="Transaction count">
+			<label for="transactionsCount">Count*</label>
+			<input name="transactionsCount" step="1" min="1" required type="number" class="form-control" id="transactionsCount" placeholder="Transaction count">
 		</div>
 		<div class="form-group mb-2">
-			<label for="minCredit">Min credit</label>
-			<input name="minCredit" step="1" type="number" class="form-control" id="minCredit" placeholder="Min credit">
+			<label for="minCredit">Min credit*</label>
+			<input name="minCredit" step="1" required type="number" class="form-control" id="minCredit" placeholder="Min credit">
 		</div>
 		<div class="form-group mb-2">
-			<label for="maxCredit">Max credit</label>
-			<input name="maxCredit" step="1" type="number" class="form-control" id="maxCredit" placeholder="Max credit">
+			<label for="maxCredit">Max credit*</label>
+			<input name="maxCredit" step="1" required type="number" class="form-control" id="maxCredit" placeholder="Max credit">
 		</div>
 		<input type="submit" class="btn btn-primary mb-2" name="generate-transactions" value="Generate" />
 	</form>

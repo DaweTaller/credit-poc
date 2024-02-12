@@ -11,8 +11,7 @@ clearAllData($pdo);
 generateTransactions(
     $pdo,
     intval(getenv('NUMBER_OF_TRANSACTIONS')),
-    intval(getenv('MIN_CREDIT')),
-    intval(getenv('MAX_CREDIT')),
+    intval(getenv('MAX_TRANSACTION_CREDIT')),
     true
 );
 

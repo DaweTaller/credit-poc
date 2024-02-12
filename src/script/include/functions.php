@@ -407,9 +407,9 @@ function getRandomReferrer(): string {
 /**
  * @throws Exception
  */
-function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredit, int $maxCredit, bool $printProcess = false) {
-    if ($minCredit > $maxCredit) {
-        throw new Exception('MinCredit is greather then MaxCredit');
+function generateTransactions(PDO $pdo, int $numberOfTransactions, int $maxTransactionCredit, bool $printProcess = false) {
+    if ($maxTransactionCredit <= 0) {
+        throw new Exception(sprintf('Max credit per transaction must be greter thwn 0, got %d', $maxTransactionCredit));
     }
 
     if ($numberOfTransactions < 0) {
@@ -430,8 +430,8 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredi
         $userId = rand(1, $maxUserId);
         $userCredit = getUserCredit($pdo, $userId, $creditTypeId);
         $amount = $userCredit === 0
-            ? rand(0, $maxCredit)
-            : rand(-$userCredit, $maxCredit);
+            ? rand(0, $maxTransactionCredit)
+            : rand(-$userCredit, $maxTransactionCredit);
 
         if ($userCredit + $amount >= 0) {
             $datetimeCreated = (new DateTimeImmutable())

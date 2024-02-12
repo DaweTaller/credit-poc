@@ -64,7 +64,7 @@ try {
         processValidFrom($pdo);
         processExpirations($pdo);
     } elseif (isset($_POST['generate-transactions'])) {
-        generateTransactions($pdo, $_POST['transactionsCount'], $_POST['minCredit'], $_POST['maxCredit']);
+        generateTransactions($pdo, $_POST['transactionsCount'], $_POST['maxTransactionCredit']);
         processExpirations($pdo);
         processValidFrom($pdo);
     }

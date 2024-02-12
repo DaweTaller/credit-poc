@@ -9,60 +9,38 @@ require_once __DIR__ . '/script/include/render.php';
 processExpirations($pdo);
 processValidFrom($pdo);
 
-$userId = $_GET['userId'] ?? null;
-
 $useCases = [];
 
 // total amount from credit
-if ($userId) {
-	$sql = 'SELECT SUM(amount) AS total_amount FROM credit WHERE user_id = ' . $userId . ' AND expired_at > NOW();';
-} else {
-    $sql = 'SELECT user_id, SUM(amount) AS total_amount FROM credit WHERE expired_at > NOW() GROUP BY user_id';
-}
+$sql = 'SELECT user_id, SUM(amount) AS total_amount FROM credit WHERE expired_at > NOW() GROUP BY user_id';
 $useCases[] = [
 	'name' => 'Total amount (variant 1 - credit)',
 	'sql' => $sql,
 	'data' => renderSqlResult($pdo, '', $sql)
 ];
 // total amount from transaction_audit
-if ($userId) {
-    $sql = 'SELECT SUM(amount) AS total_amount FROM transaction_audit WHERE user_id = ' . $userId . ' AND expired_at > NOW();';
-} else {
-    $sql = 'SELECT user_id, SUM(ta.amount) AS total_amount FROM transaction_audit ta JOIN credit c ON c.id = ta.credit_id  WHERE expired_at > NOW() GROUP BY c.user_id';
-}
+$sql = 'SELECT user_id, SUM(ta.amount) AS total_amount FROM transaction_audit ta JOIN credit c ON c.id = ta.credit_id  WHERE expired_at > NOW() GROUP BY c.user_id';
 $useCases[] = [
     'name' => 'Total amount (variant 2 - transaction audit)',
     'sql' => $sql,
     'data' => renderSqlResult($pdo, '', $sql)
 ];
 // amount by credit type
-if ($userId) {
-    $sql = 'SELECT SUM(amount) AS amount FROM credit WHERE user_id = ' . $userId . ' AND expired_at > NOW();';
-} else {
-    $sql = 'SELECT user_id, credit_type_id, SUM(amount) AS amount FROM credit WHERE expired_at > NOW() GROUP BY user_id, credit_type_id';
-}
+$sql = 'SELECT user_id, credit_type_id, SUM(amount) AS amount FROM credit WHERE expired_at > NOW() GROUP BY user_id, credit_type_id';
 $useCases[] = [
     'name' => 'Amount by credit type (variant 1 - credit)',
     'sql' => $sql,
     'data' => renderSqlResult($pdo, '', $sql)
 ];
 // amount by credit type
-if ($userId) {
-    $sql = 'SELECT SUM(amount) AS amount FROM credit WHERE user_id = ' . $userId . ' AND expired_at > NOW();';
-} else {
-    $sql = 'SELECT user_id, credit_type_id, SUM(ta.amount) AS amount FROM transaction_audit ta JOIN credit c ON c.id = ta.credit_id WHERE expired_at > NOW() GROUP BY user_id, credit_type_id';
-}
+$sql = 'SELECT user_id, credit_type_id, SUM(ta.amount) AS amount FROM transaction_audit ta JOIN credit c ON c.id = ta.credit_id WHERE expired_at > NOW() GROUP BY user_id, credit_type_id';
 $useCases[] = [
     'name' => 'Amount by credit type (variant 2 - transaction audit)',
     'sql' => $sql,
     'data' => renderSqlResult($pdo, '', $sql)
 ];
 // total expired credit
-if ($userId) {
-    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::EXPIRATION->value . '\'';
-} else {
-    $sql = 'SELECT user_id, SUM(t.amount) AS expired_amount FROM transaction t WHERE t.type = \'' . TransactionTypeEnum::EXPIRATION->value . '\' GROUP BY user_id';
-}
+$sql = 'SELECT user_id, SUM(t.amount) AS expired_amount FROM transaction t WHERE t.type = \'' . TransactionTypeEnum::EXPIRATION->value . '\' GROUP BY user_id';
 $useCases[] = [
     'name' => 'Total expired credit',
     'sql' => $sql,
@@ -70,11 +48,7 @@ $useCases[] = [
 ];
 
 // expired credit by credit type
-if ($userId) {
-    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::EXPIRATION->value . '\'';
-} else {
-    $sql = 'SELECT t.user_id, credit_type_id, SUM(t.amount) AS expired_amount FROM transaction t LEFT JOIN transaction_audit ta ON t.id = ta.transaction_id JOIN credit c ON c.id = ta.credit_id WHERE t.type = \'' . TransactionTypeEnum::EXPIRATION->value . '\' GROUP BY t.user_id, credit_type_id';
-}
+$sql = 'SELECT t.user_id, credit_type_id, SUM(t.amount) AS expired_amount FROM transaction t LEFT JOIN transaction_audit ta ON t.id = ta.transaction_id JOIN credit c ON c.id = ta.credit_id WHERE t.type = \'' . TransactionTypeEnum::EXPIRATION->value . '\' GROUP BY t.user_id, credit_type_id';
 $useCases[] = [
     'name' => 'Expired credit by credit type',
     'sql' => $sql,
@@ -82,19 +56,30 @@ $useCases[] = [
 ];
 
 // getUsable credit by priority
-if ($userId) {
-    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::EXPIRATION->value . '\'';
-} else {
-    $sql = 'SELECT c.user_id, c.id AS credit_id, ct.priority, ct.name AS creditType, c.created_at, c.expired_at, amount
+ $sql = 'SELECT c.user_id, c.id AS credit_id, ct.priority, ct.name AS creditType, c.created_at, c.expired_at, amount
         FROM credit c JOIN credit_type ct ON c.credit_type_id = ct.id
         WHERE (c.expired_at IS NULL OR c.expired_at > NOW()) AND amount > 0
         ORDER BY c.user_id, ct.priority, c.expired_at, c.created_at ASC';
-}
 $useCases[] = [
     'name' => 'Usable credits by priority',
     'sql' => $sql,
     'data' => renderSqlResult($pdo, '', $sql)
 ];
+
+// credits to validate
+$sql = "SELECT id, user_id, amount, credit_type_id
+            FROM request
+            WHERE transaction_id IS NULL 
+              AND valid_from IS NOT NULL
+              AND valid_from <= NOW()
+              AND rollback_at IS NULL
+              AND amount > 0";
+$useCases[] = [
+    'name' => 'Get valid requests with validate_from',
+    'sql' => $sql,
+    'data' => renderSqlResult($pdo, '', $sql)
+];
+
 
 $protocol = $_SERVER['PROTOCOL'] = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) ? "https://" : "http://";
 $redirectUrl = $protocol . $_SERVER['HTTP_HOST'];

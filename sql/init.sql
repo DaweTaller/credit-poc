@@ -26,7 +26,7 @@ CREATE TABLE transaction (
     id INT(11) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
     user_id INT(11) UNSIGNED NOT NULL,
     amount INT(11) NOT NULL,
-    type ENUM('account-movement', 'credit-expiration') NOT NULL,
+    type ENUM('standard', 'credit-expiration', 'valid-from') NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expired_at TIMESTAMP,
     CONSTRAINT fk_credit_audit_log_user_id FOREIGN KEY (user_id)

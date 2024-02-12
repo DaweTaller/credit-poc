@@ -16,6 +16,7 @@ try {
         $userId = $_POST['userId'];
         $amount = $_POST['amount'];
         $creditTypeId = $_POST['creditTypeId'];
+        $validFrom = $_POST['validFrom'] !== "" ? new DateTimeImmutable($_POST['validFrom']) : null;
         $additionalData = [
             'requestId' => $requestId,
             'referrer' => $referrer,
@@ -24,9 +25,21 @@ try {
             'creditTypeId' => $creditTypeId,
         ];
 
-        createTransactionRequest($pdo, $requestId, $userId, $referrer,$amount, $creditTypeId, $additionalData);
-        $transactionId = addCredit($pdo, $userId, $creditTypeId, $amount);
-        setTransactionIdToRequest($pdo, $requestId, $transactionId);
+        createTransactionRequest(
+            $pdo,
+            $requestId,
+            $userId,
+            $referrer,$amount,
+            $creditTypeId,
+            $additionalData,
+            $validFrom
+        );
+
+        // add only valid transactions
+        if ($validFrom === null || $validFrom->format(DATETIME_FORMAT) <= (new DateTimeImmutable())->format(DATETIME_FORMAT)) {
+            $transactionId = addCredit($pdo, $userId, $creditTypeId, $amount);
+            setTransactionIdToRequest($pdo, $requestId, $transactionId);
+        }
     } elseif (isset($_POST['use-credit'])) {
         $requestId = generateRequestId();
         $referrer = getRandomReferrer();
@@ -45,9 +58,15 @@ try {
     } elseif (isset($_POST['expire-credit'])) {
         setExpirationOnCredit($pdo, $_POST['creditId']);
         processExpirations($pdo);
+        processValidFrom($pdo);
+    } elseif (isset($_POST['valid-from'])) {
+        setValidFromOnRequest($pdo, $_POST['requestId']);
+        processValidFrom($pdo);
+        processExpirations($pdo);
     } elseif (isset($_POST['generate-transactions'])) {
         generateTransactions($pdo, $_POST['transactionsCount'], $_POST['minCredit'], $_POST['maxCredit']);
         processExpirations($pdo);
+        processValidFrom($pdo);
     }
 } catch (NotEnoughtCreditsException | ZeroAmountException | ExpiredCreditTypeException $e) {
     echo sprintf(

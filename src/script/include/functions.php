@@ -131,6 +131,7 @@ function useCredit(
     }
 
     processExpirations($pdo, $userId);
+    processValidFrom($pdo, $userId);
 
     $pdo->beginTransaction();
 
@@ -153,7 +154,7 @@ function useCredit(
         $query->execute([
             $userId,
             -$amount,
-            TransactionTypeEnum::ACCOUNT_MOVEMENT->value,
+            TransactionTypeEnum::STANDARD->value,
             $createdAt,
         ]);
         $transactionId = $pdo->lastInsertId();
@@ -205,7 +206,7 @@ function useCredit(
  * @throws ExpiredCreditTypeException
  * @throws Exception
  */
-function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null): int {
+function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null, $type = TransactionTypeEnum::STANDARD): int {
     if ($amount <= 0) {
         throw new ZeroAmountException('Cant add credits with zero or less amount');
     }
@@ -225,7 +226,7 @@ function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateT
         $query->execute([
             $userId,
             $amount,
-            TransactionTypeEnum::ACCOUNT_MOVEMENT->value,
+            $type->value,
             $createdAt,
             $expiredAt
         ]);
@@ -284,11 +285,54 @@ function processExpirations(PDO $pdo, ?int $userId = null) {
     }
 }
 
-function setExpirationOnCredit(PDO $pdo, int $creditId, DateTimeImmutable $expiration = null) {
+function processValidFrom(PDO $pdo, ?int $userId = null) {
+    $sql = "SELECT id, user_id, amount, credit_type_id
+            FROM request
+            WHERE transaction_id IS NULL 
+              AND valid_from IS NOT NULL
+              AND valid_from <= NOW()
+              AND rollback_at IS NULL
+              AND amount > 0";
+
+    $parameters = [];
+    if ($userId !== null) {
+        $sql .= ' AND user_id = ?';
+        $parameters[] = $userId;
+    }
+
+    $query = $pdo->prepare($sql);
+    $query->execute($parameters);
+    $results = $query->fetchAll(PDO::FETCH_ASSOC);
+    $createdAt = new DateTimeImmutable();
+
+    foreach ($results as $result) {
+        // TODO: run in db transaction -> in addCredit is also transaction need to resolve nested transactions
+        $transactionId = addCredit(
+            $pdo,
+            $result['user_id'],
+            $result['credit_type_id'],
+            $result['amount'],
+            $createdAt,
+            TransactionTypeEnum::VALID_FROM
+        );
+
+        $query = $pdo->prepare('UPDATE request SET transaction_id = ?, updated_at = ? WHERE id = ?');
+        $query->execute([$transactionId, $createdAt->format(DATETIME_FORMAT), $result['id']]);
+    }
+}
+
+function setExpirationOnCredit(PDO $pdo, int $creditId, ?DateTimeImmutable $expiration = null) {
     $expiration = $expiration ?? new DateTimeImmutable();
 
     $query = $pdo->prepare('UPDATE credit SET expired_at = ? WHERE id = ?');
     $query->execute([$expiration->format(DATETIME_FORMAT), $creditId]);
+}
+
+function setValidFromOnRequest(PDO $pdo, int $requestId, ?DateTimeImmutable $validFrom = null) {
+    $validFrom = $validFrom ?? new DateTimeImmutable();
+
+    $query = $pdo->prepare('UPDATE request SET valid_from = ? WHERE id = ?');
+    $query->execute([$validFrom->format(DATETIME_FORMAT), $requestId]);
 }
 
 function createTransactionRequest(
@@ -299,13 +343,26 @@ function createTransactionRequest(
     int $amount,
     ?int $creditTypeId,
     array $additionalData,
+    ?DateTimeImmutable $validFrom = null,
     ?DateTimeImmutable $createdAt = null
 ): void {
     $createdAt = $createdAt ?? new DateTimeImmutable();
     $createdAt = $createdAt->format(DATETIME_FORMAT);
-
-    $query = $pdo->prepare('INSERT INTO request (request_id, user_id, referrer, amount, credit_type_id, additional_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    $query->execute([$requestId, $userId, $referrer, $amount, $creditTypeId, json_encode($additionalData), $createdAt]);
+    $validFrom = $validFrom !== null ? $validFrom->format(DATETIME_FORMAT) : null;
+    $query = $pdo->prepare('
+        INSERT INTO request (request_id, user_id, referrer, amount, credit_type_id, additional_data, created_at, valid_from)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ');
+    $query->execute([
+        $requestId,
+        $userId,
+        $referrer,
+        $amount,
+        $creditTypeId,
+        json_encode($additionalData),
+        $createdAt,
+        $validFrom
+    ]);
 }
 
 /**
@@ -393,6 +450,7 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredi
                     $referrer,$amount,
                     $creditTypeId,
                     $additionalData,
+                    null,
                     $datetimeCreated
                 );
 

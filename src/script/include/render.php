@@ -170,6 +170,18 @@ function renderExpireCreditForm() { ?>
     </form>
 <?php }
 
+function renderValidFromNowForm() { ?>
+	<form action="script/form-submit.php" method="post">
+		<div class="form-group">
+			<label for="requestId">Request id*</label>
+			<input name="requestId" min="1" required type="number" class="form-control" id="requestId" placeholder="Request id">
+		</div>
+		<div class="form-group">
+			<input type="submit" class="btn btn-primary pull-right" name="valid-from" value="Valid from now" />
+		</div>
+	</form>
+<?php }
+
 
 function renderAuditLogForm(PDO $pdo) { ?>
 	<form action="audit-log.php" method="get">

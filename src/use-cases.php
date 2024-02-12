@@ -7,6 +7,7 @@ require_once __DIR__ . '/script/include/functions.php';
 require_once __DIR__ . '/script/include/render.php';
 
 processExpirations($pdo);
+processValidFrom($pdo);
 
 $userId = $_GET['userId'] ?? null;
 

@@ -4,6 +4,7 @@ require_once __DIR__ . '/script/include/render.php';
 require_once __DIR__ . '/script/include/functions.php';
 
 processExpirations($pdo);
+processValidFrom($pdo);
 ?>
 
 <html>
@@ -42,6 +43,9 @@ processExpirations($pdo);
 				<div class="col-md-3">
 					<h2>Expire credit</h2>
                     <?php renderExpireCreditForm() ?>
+					<br>
+					<h2>Valid from</h2>
+                    <?php renderValidFromNowForm(); ?>
 				</div>
 				<div class="col-md-3">
 					<h2>Audit log</h2>

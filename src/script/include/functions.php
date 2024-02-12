@@ -347,7 +347,7 @@ function createTransactionRequest(
     string $referrer,
     int $amount,
     ?int $creditTypeId,
-    array $additionalData,
+    array $rawData,
     ?DateTimeImmutable $validFrom = null,
     ?DateTimeImmutable $createdAt = null
 ): void {
@@ -355,7 +355,7 @@ function createTransactionRequest(
     $createdAt = $createdAt->format(DATETIME_FORMAT);
     $validFrom = $validFrom !== null ? $validFrom->format(DATETIME_FORMAT) : null;
     $query = $pdo->prepare('
-        INSERT INTO request (request_id, user_id, referrer, amount, credit_type_id, additional_data, created_at, valid_from)
+        INSERT INTO request (request_id, user_id, referrer, amount, credit_type_id, raw_data, created_at, valid_from)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ');
     $query->execute([
@@ -364,7 +364,7 @@ function createTransactionRequest(
         $referrer,
         $amount,
         $creditTypeId,
-        json_encode($additionalData),
+        json_encode($rawData),
         $createdAt,
         $validFrom
     ]);
@@ -441,7 +441,7 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $maxTrans
                 $datetimeCreated = $datetimeCreated->modify('+' . $secondsPerTransaction . ' seconds');
                 $requestId = generateRequestId();
                 $referrer = getRandomReferrer();
-                $additionalData = [
+                $rawData = [
                     'requestId' => $requestId,
                     'referrer' => $referrer,
                     'userId' => $userId,
@@ -454,7 +454,7 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $maxTrans
                     $userId,
                     $referrer,$amount,
                     $creditTypeId,
-                    $additionalData,
+                    $rawData,
                     null,
                     $datetimeCreated
                 );

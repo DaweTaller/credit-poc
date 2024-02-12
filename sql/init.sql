@@ -73,7 +73,7 @@ CREATE TABLE request (
     amount INT(11) NOT NULL,
     credit_type_id INT(11) UNSIGNED,
     transaction_id INT(11) UNSIGNED,
-    additional_data json NOT NULL,
+    raw_data json NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     valid_from TIMESTAMP,

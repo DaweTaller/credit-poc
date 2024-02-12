@@ -17,7 +17,7 @@ try {
         $amount = $_POST['amount'];
         $creditTypeId = $_POST['creditTypeId'];
         $validFrom = $_POST['validFrom'] !== "" ? new DateTimeImmutable($_POST['validFrom']) : null;
-        $additionalData = [
+        $rawData = [
             'requestId' => $requestId,
             'referrer' => $referrer,
             'userId' => $userId,
@@ -31,7 +31,7 @@ try {
             $userId,
             $referrer,$amount,
             $creditTypeId,
-            $additionalData,
+            $rawData,
             $validFrom
         );
 
@@ -45,14 +45,14 @@ try {
         $referrer = getRandomReferrer();
         $userId = $_POST['userId'];
         $amount = $_POST['amount'];
-        $additionalData = [
+        $rawData = [
             'requestId' => $requestId,
             'referrer' => $referrer,
             'userId' => $userId,
             'amount' => -$amount,
         ];
 
-        createTransactionRequest($pdo, $requestId, $userId, $referrer, -$amount, null, $additionalData);
+        createTransactionRequest($pdo, $requestId, $userId, $referrer, -$amount, null, $rawData);
         $transactionId = useCredit($pdo, $userId, $amount);
         setTransactionIdToRequest($pdo, $requestId, $transactionId);
     } elseif (isset($_POST['expire-credit'])) {

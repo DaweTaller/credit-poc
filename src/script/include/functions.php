@@ -86,7 +86,7 @@ function isCreditTypeExpired(PDO $pdo, int $creditTypeId): bool {
         throw new EntityNotFoundException(sprintf('Credit type with id %d does not exists', $creditTypeId));
     }
 
-    return $result === '1';
+    return $result === 1;
 }
 
 /**
@@ -355,8 +355,13 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredi
     $transactionToProcess = $numberOfTransactions;
 
     while ($transactionToProcess > 0) {
-        $userId = rand(1, $maxUserId);
         $creditTypeId = rand(1, $maxCreditTypeId);
+
+        if(isCreditTypeExpired($pdo, $creditTypeId)) {
+            continue;
+        }
+
+        $userId = rand(1, $maxUserId);
         $userCredit = getUserCredit($pdo, $userId, $creditTypeId);
         $amount = $userCredit === 0
             ? rand(0, $maxCredit)

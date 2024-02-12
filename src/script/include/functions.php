@@ -420,8 +420,8 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $maxTrans
     $maxCreditTypeId = $pdo->query('SELECT MAX(id) FROM credit_type')->fetchColumn();
     $transactionToProcess = $numberOfTransactions;
     $datetimeCreated = (new DateTimeImmutable())->modify('-3 year');
-    $totalSecondsForTransactions = (new DateTimeImmutable())->getTimestamp() - $datetimeCreated->getTimestamp();
-    $secondsPerTransaction = intval($totalSecondsForTransactions / $numberOfTransactions);
+    $secondsForTransactions = (new DateTimeImmutable())->getTimestamp() - $datetimeCreated->getTimestamp();
+    $secondsPerTransaction = intval($secondsForTransactions / $numberOfTransactions);
 
     while ($transactionToProcess > 0) {
         $creditTypeId = rand(1, $maxCreditTypeId);

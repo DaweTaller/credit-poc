@@ -155,7 +155,7 @@ function renderUseCreditForm(PDO $pdo) { ?>
 <?php }
 
 function renderExpireCreditForm() { ?>
-    <form action="script/form_submit.php" method="post">
+    <form action="script/form-submit.php" method="post">
         <div class="form-group">
             <label for="creditId">Credit Id</label>
             <input name="creditId" min="1" required type="number" class="form-control" id="creditId" placeholder="Credit Id">

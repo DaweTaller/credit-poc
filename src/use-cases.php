@@ -59,9 +59,9 @@ $useCases[] = [
 ];
 // total expired credit
 if ($userId) {
-    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::CREDIT_EXPIRATION->value . '\'';
+    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::EXPIRATION->value . '\'';
 } else {
-    $sql = 'SELECT user_id, SUM(t.amount) AS expired_amount FROM transaction t WHERE t.type = \'' . TransactionTypeEnum::CREDIT_EXPIRATION->value . '\' GROUP BY user_id';
+    $sql = 'SELECT user_id, SUM(t.amount) AS expired_amount FROM transaction t WHERE t.type = \'' . TransactionTypeEnum::EXPIRATION->value . '\' GROUP BY user_id';
 }
 $useCases[] = [
     'name' => 'Total expired credit',
@@ -71,9 +71,9 @@ $useCases[] = [
 
 // expired credit by credit type
 if ($userId) {
-    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::CREDIT_EXPIRATION->value . '\'';
+    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::EXPIRATION->value . '\'';
 } else {
-    $sql = 'SELECT t.user_id, credit_type_id, SUM(t.amount) AS expired_amount FROM transaction t LEFT JOIN transaction_audit ta ON t.id = ta.transaction_id JOIN credit c ON c.id = ta.credit_id WHERE t.type = \'' . TransactionTypeEnum::CREDIT_EXPIRATION->value . '\' GROUP BY t.user_id, credit_type_id';
+    $sql = 'SELECT t.user_id, credit_type_id, SUM(t.amount) AS expired_amount FROM transaction t LEFT JOIN transaction_audit ta ON t.id = ta.transaction_id JOIN credit c ON c.id = ta.credit_id WHERE t.type = \'' . TransactionTypeEnum::EXPIRATION->value . '\' GROUP BY t.user_id, credit_type_id';
 }
 $useCases[] = [
     'name' => 'Expired credit by credit type',
@@ -83,7 +83,7 @@ $useCases[] = [
 
 // getUsable credit by priority
 if ($userId) {
-    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::CREDIT_EXPIRATION->value . '\'';
+    $sql = 'SELECT SUM(amount) AS amount FROM transaction WHERE user_id = ' . $userId . ' AND type = \'' . TransactionTypeEnum::EXPIRATION->value . '\'';
 } else {
     $sql = 'SELECT c.user_id, c.id AS credit_id, ct.priority, ct.name AS creditType, c.created_at, c.expired_at, amount
         FROM credit c JOIN credit_type ct ON c.credit_type_id = ct.id

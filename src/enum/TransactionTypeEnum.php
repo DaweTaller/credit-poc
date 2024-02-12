@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 enum TransactionTypeEnum: string
 {
-    case STANDARD = 'standard';
+    case REGULAR = 'regular';
 
-    case CREDIT_EXPIRATION = 'credit-expiration';
+    case EXPIRATION = 'expiration';
 
     case VALID_FROM = 'valid-from';
 }

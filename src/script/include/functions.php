@@ -102,7 +102,7 @@ function getUserCreditsByPriority(PDO $pdo, int $userId): array {
         FROM credit c JOIN credit_type ct ON c.credit_type_id = ct.id
         WHERE c.user_id = ?
           AND (c.expired_at IS NULL OR c.expired_at > NOW())
-        ORDER BY ct.priority, c.expired_at ASC'
+        ORDER BY ct.priority, c.expired_at, c.created_at ASC'
     );
 
     $query->execute([$userId]);
@@ -154,7 +154,7 @@ function useCredit(
         $query->execute([
             $userId,
             -$amount,
-            TransactionTypeEnum::STANDARD->value,
+            TransactionTypeEnum::REGULAR->value,
             $createdAt,
         ]);
         $transactionId = $pdo->lastInsertId();
@@ -206,7 +206,7 @@ function useCredit(
  * @throws ExpiredCreditTypeException
  * @throws Exception
  */
-function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null, $type = TransactionTypeEnum::STANDARD): int {
+function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null, $type = TransactionTypeEnum::REGULAR): int {
     if ($amount <= 0) {
         throw new ZeroAmountException('Cant add credits with zero or less amount');
     }
@@ -272,7 +272,7 @@ function processExpirations(PDO $pdo, ?int $userId = null) {
             $query->execute([
                 $userId,
                 -$amount,
-                TransactionTypeEnum::CREDIT_EXPIRATION->value,
+                TransactionTypeEnum::EXPIRATION->value,
                 $createdAt,
             ]);
             $transactionId = $pdo->lastInsertId();
@@ -324,14 +324,19 @@ function processValidFrom(PDO $pdo, ?int $userId = null) {
 function setExpirationOnCredit(PDO $pdo, int $creditId, ?DateTimeImmutable $expiration = null) {
     $expiration = $expiration ?? new DateTimeImmutable();
 
-    $query = $pdo->prepare('UPDATE credit SET expired_at = ? WHERE id = ?');
+    $query = $pdo->prepare('UPDATE credit SET expired_at = ? WHERE id = ? AND amount > 0');
     $query->execute([$expiration->format(DATETIME_FORMAT), $creditId]);
 }
 
 function setValidFromOnRequest(PDO $pdo, int $requestId, ?DateTimeImmutable $validFrom = null) {
     $validFrom = $validFrom ?? new DateTimeImmutable();
 
-    $query = $pdo->prepare('UPDATE request SET valid_from = ? WHERE id = ?');
+    $query = $pdo->prepare('UPDATE request
+        SET valid_from = ?
+        WHERE id = ?
+          AND transaction_id IS NULL
+          AND rollback_at IS NULL'
+    );
     $query->execute([$validFrom->format(DATETIME_FORMAT), $requestId]);
 }
 

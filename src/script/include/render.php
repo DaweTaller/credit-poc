@@ -227,7 +227,7 @@ function renderAddTransactionsForm(PDO $pdo) { ?>
 		</div>
 		<div class="form-group mb-2">
 			<label for="maxTransactionCredit">Max credit per transaction*</label>
-			<input name="maxTransactionCredit" step="1" required type="number" class="form-control" id="maxTransactionCredit" placeholder="Max credit">
+			<input name="maxTransactionCredit" step="1" min="1" required type="number" class="form-control" id="maxTransactionCredit" placeholder="Max credit">
 		</div>
 		<input type="submit" class="btn btn-primary mb-2" name="generate-transactions" value="Generate" />
 	</form>

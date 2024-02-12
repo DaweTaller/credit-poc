@@ -45,6 +45,9 @@ try {
     } elseif (isset($_POST['expire-credit'])) {
         setExpirationOnCredit($pdo, $_POST['creditId']);
         processExpirations($pdo);
+    } elseif (isset($_POST['generate-transactions'])) {
+        generateTransactions($pdo, $_POST['transactionsCount'], $_POST['minCredit'], $_POST['maxCredit']);
+        processExpirations($pdo);
     }
 } catch (NotEnoughtCreditsException | ZeroAmountException | ExpiredCreditTypeException $e) {
     echo sprintf(

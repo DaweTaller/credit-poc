@@ -336,3 +336,81 @@ function getRandomReferrer(): string {
 
     return $referrers[rand(0, count($referrers) - 1)];
 }
+
+
+/**
+ * @throws Exception
+ */
+function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredit, int $maxCredit, bool $printProcess = false) {
+    if ($minCredit > $maxCredit) {
+        throw new Exception('MinCredit is greather then MaxCredit');
+    }
+
+    if ($numberOfTransactions < 0) {
+        throw new Exception(sprintf('Number of transactions are less then 0, got %d', $numberOfTransactions));
+    }
+
+    $maxUserId = $pdo->query('SELECT MAX(id) FROM user')->fetchColumn();
+    $maxCreditTypeId = $pdo->query('SELECT MAX(id) FROM credit_type')->fetchColumn();
+    $transactionToProcess = $numberOfTransactions;
+
+    while ($transactionToProcess > 0) {
+        $userId = rand(1, $maxUserId);
+        $creditTypeId = rand(1, $maxCreditTypeId);
+        $userCredit = getUserCredit($pdo, $userId, $creditTypeId);
+        $amount = $userCredit === 0
+            ? rand(0, $maxCredit)
+            : rand(-$userCredit, $maxCredit);
+
+        if ($userCredit + $amount >= 0) {
+            $datetimeCreated = (new DateTimeImmutable())
+                ->modify('-' . rand(0, 365 * 2) . ' day')
+                ->setTime(rand(0, 23), rand(0, 59), rand(0, 59));
+
+            try {
+                $requestId = generateRequestId();
+                $referrer = getRandomReferrer();
+                $additionalData = [
+                    'requestId' => $requestId,
+                    'referrer' => $referrer,
+                    'userId' => $userId,
+                    'amount' => $amount,
+                    'creditTypeId' => $creditTypeId,
+                ];
+                createTransactionRequest($pdo, $requestId, $userId, $referrer,$amount, $creditTypeId, $additionalData);
+
+                if ($amount > 0) {
+                    $transactionId = addCredit($pdo, $userId, $creditTypeId, $amount, $datetimeCreated);
+                } else {
+                    $transactionId = useCredit($pdo, $userId, abs($amount), $datetimeCreated);
+                }
+
+                setTransactionIdToRequest($pdo, $requestId, $transactionId);
+
+                if ($printProcess && $transactionToProcess !== $numberOfTransactions && $transactionToProcess % 100 === 0) {
+                    printProcessedTransactions($transactionToProcess, $numberOfTransactions);
+                }
+
+                $transactionToProcess--;
+            } catch (NotEnoughtCreditsException | ZeroAmountException $e) {
+                if ($printProcess) {
+                    echo $e->getMessage() . PHP_EOL;
+                }
+            }
+        }
+    }
+
+    if ($printProcess) {
+        printProcessedTransactions($transactionToProcess, $numberOfTransactions);
+    }
+}
+
+function printProcessedTransactions(int $transactionToProcess, int $totalTransactions) {
+    $filled = $totalTransactions - $transactionToProcess;
+
+    echo sprintf(
+        'Filled %d/%d transactions.' . PHP_EOL,
+        $filled,
+        $totalTransactions
+    );
+}

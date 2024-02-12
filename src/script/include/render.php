@@ -202,3 +202,21 @@ function renderAuditLogForm(PDO $pdo) { ?>
 		</div>
 	</form>
 <?php }
+
+function renderAddTransactionsForm(PDO $pdo) { ?>
+	<form action="script/form-submit.php" method="post" class="form-inline">
+		<div class="form-group mb-2">
+			<label for="transactionsCount">Count</label>
+			<input name="transactionsCount" step="1" min="1" type="number" class="form-control" id="transactionsCount" placeholder="Transaction count">
+		</div>
+		<div class="form-group mb-2">
+			<label for="minCredit">Min credit</label>
+			<input name="minCredit" step="1" type="number" class="form-control" id="minCredit" placeholder="Min credit">
+		</div>
+		<div class="form-group mb-2">
+			<label for="maxCredit">Max credit</label>
+			<input name="maxCredit" step="1" type="number" class="form-control" id="maxCredit" placeholder="Max credit">
+		</div>
+		<input type="submit" class="btn btn-primary mb-2" name="generate-transactions" value="Generate" />
+	</form>
+<?php }

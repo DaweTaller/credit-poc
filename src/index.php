@@ -14,16 +14,20 @@ processExpirations($pdo);
 	<body>
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-sm-12">
+				<div class="col-sm-2">
 					<br>
 					<?php renderResetDataForm() ?>
 				</div>
 			</div>
 			<div class="row">
-				<div class="col-sm-12">
+				<div class="col-sm-2">
 					<br>
                     <?php renderGoToUseCasesForm(); ?>
                     <?php renderGoToAuditLogForm(); ?>
+				</div>
+				<div class="col-sm-10">
+					<h4>Add transactions</h4>
+                    <?php renderAddTransactionsForm($pdo); ?>
 				</div>
 			</div>
 			<div class="row">

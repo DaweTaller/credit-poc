@@ -5,7 +5,7 @@ declare(strict_types = 1);
 require_once __DIR__ . '/../../exception/NotEnoughtCreditsException.php';
 require_once __DIR__ . '/../../exception/ZeroAmountException.php';
 require_once __DIR__ . '/../../exception/EntityNotFoundException.php';
-require_once __DIR__ . '/../../exception/InactiveCreditTypeException.php';
+require_once __DIR__ . '/../../exception/ExpiredCreditTypeException.php';
 require_once __DIR__ . '/../../enum/TransactionTypeEnum.php';
 
 const DATETIME_FORMAT = 'Y-m-d H:i:s';
@@ -77,16 +77,16 @@ function getCreditTypeExpiration(PDO $pdo, int $creditTypeId, ?DateTimeImmutable
 /**
  * @throws EntityNotFoundException
  */
-function isCreditTypeActive(PDO $pdo, int $creditTypeId): bool {
-    $stmt = $pdo->prepare('SELECT active FROM credit_type WHERE id = ?');
+function isCreditTypeExpired(PDO $pdo, int $creditTypeId): bool {
+    $stmt = $pdo->prepare('SELECT IF(expirate_at IS NOT NULL AND expirate_at <= NOW(), 1, 0) as isExpired FROM credit_type WHERE id = ?');
     $stmt->execute([$creditTypeId]);
     $result = $stmt->fetchColumn();
 
-    if ($result === null) {
+    if ($result === false) {
         throw new EntityNotFoundException(sprintf('Credit type with id %d does not exists', $creditTypeId));
     }
 
-    return $result === 'yes';
+    return $result === '1';
 }
 
 /**
@@ -202,7 +202,7 @@ function useCredit(
  * @throws NotEnoughtCreditsException
  * @throws EntityNotFoundException
  * @throws ZeroAmountException
- * @throws InactiveCreditTypeException
+ * @throws ExpiredCreditTypeException
  * @throws Exception
  */
 function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateTimeImmutable $createdAt = null): int {
@@ -210,8 +210,8 @@ function addCredit(PDO $pdo, int $userId, int $creditTypeId, int $amount, ?DateT
         throw new ZeroAmountException('Cant add credits with zero or less amount');
     }
 
-    if (isCreditTypeActive($pdo, $creditTypeId) === false) {
-        throw new InactiveCreditTypeException(sprintf('Credit type %d is not active', $creditTypeId));
+    if (isCreditTypeExpired($pdo, $creditTypeId)) {
+        throw new ExpiredCreditTypeException(sprintf('Credit type %d is expired', $creditTypeId));
     }
 
     $pdo->beginTransaction();

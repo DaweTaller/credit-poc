@@ -46,7 +46,7 @@ try {
         setExpirationOnCredit($pdo, $_POST['creditId']);
         processExpirations($pdo);
     }
-} catch (NotEnoughtCreditsException | ZeroAmountException | InactiveCreditTypeException $e) {
+} catch (NotEnoughtCreditsException | ZeroAmountException | ExpiredCreditTypeException $e) {
     echo sprintf(
         '<strong>%s</strong><br><br><a href="%s">Go back</a>',
         $e->getMessage(),

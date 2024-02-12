@@ -17,8 +17,7 @@ CREATE TABLE credit_type (
     updated_at TIMESTAMP,
     expiration_in_days SMALLINT UNSIGNED,
     expirate_at TIMESTAMP,
-    priority SMALLINT NOT NULL COMMENT "Priority in which is credits used. 1 for first use.",
-    active ENUM('yes', 'no') DEFAULT 'yes' NOT NULL
+    priority SMALLINT NOT NULL COMMENT "Priority in which is credits used. 1 for first use."
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 
 -- transaction
@@ -77,6 +76,7 @@ CREATE TABLE request (
     additional_data json NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
+    valid_from TIMESTAMP,
     rollback_at TIMESTAMP,
     CONSTRAINT fk_request_transaction_id FOREIGN KEY (transaction_id)
         REFERENCES transaction(id) ON DELETE RESTRICT ON UPDATE CASCADE

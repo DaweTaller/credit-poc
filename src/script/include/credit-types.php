@@ -10,15 +10,27 @@ $creditTypes = [
         'priority' => 1,
     ],
     [
-        'name' => 'marketing',
-        'expiration' => 30,
-        'expirate_at' => null,
+        'name' => 'christmas',
+        'expiration' => null,
+        'expirate_at' => new DateTimeImmutable('2025-01-31 00:00:00'),
         'priority' => 2,
     ],
     [
-        'name' => 'christmas',
-        'expiration' => 60,
-        'expirate_at' => new DateTimeImmutable('2025-01-31 00:00:00'),
+        'name' => 'month credits',
+        'expiration' => 30,
+        'expirate_at' => null,
         'priority' => 3,
+    ],
+    [
+        'name' => 'marketing with ending',
+        'expiration' => 90,
+        'expirate_at' => new DateTimeImmutable('2025-10-20 00:00:00'),
+        'priority' => 4,
+    ],
+    [
+        'name' => 'expired credit',
+        'expiration' => null,
+        'expirate_at' => new DateTimeImmutable('2022-01-01 00:00:00'),
+        'priority' => 5,
     ],
 ];

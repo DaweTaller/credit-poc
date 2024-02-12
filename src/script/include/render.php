@@ -101,9 +101,10 @@ function renderAddCreditForm(PDO $pdo) { ?>
                         $creditType['name'],
                         $hasExpiration ?
                             sprintf(
-                                '(expiration: %s%s)',
+                                '(expiration: %s%s%s)',
                                 $expirationInDaysString,
-                                $expiredAtString !== null ? ' or ' . $expiredAtString : ''
+                                $expiredAtString !== null && $expirationInDaysString !== null ? ' till ' : '',
+                                $expiredAtString !== null ? $expiredAtString : ''
                             ) : '',
 					);
 

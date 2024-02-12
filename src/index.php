@@ -23,8 +23,9 @@ processValidFrom($pdo);
 			<div class="row">
 				<div class="col-sm-2">
 					<br>
-                    <?php renderGoToUseCasesForm(); ?>
-                    <?php renderGoToAuditLogForm(); ?>
+					<a href="use-cases.php">Go to <strong>use cases</strong></a>
+					<br><br>
+					<a href="audit-log.php">Go to <strong>audit log</strong></a>
 				</div>
 				<div class="col-sm-10">
 					<h4>Add transactions</h4>

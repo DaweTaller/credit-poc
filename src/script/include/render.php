@@ -46,23 +46,6 @@ function renderResetDataForm() { ?>
 
 <?php }
 
-function renderGoToUseCasesForm() { ?>
-	<form action="use-cases.php" method="post">
-		<div class="form-group">
-			<input type="submit" class="btn btn-primary" formnovalidate name="go-to-use-cases" value="Go to use-cases" />
-		</div>
-	</form>
-
-<?php }
-function renderGoToAuditLogForm() { ?>
-	<form action="audit-log.php" method="post">
-		<div class="form-group">
-			<input type="submit" class="btn btn-primary" formnovalidate name="go-to-audit-log" value="Go to audit-log" />
-		</div>
-	</form>
-
-<?php }
-
 function renderAddCreditForm(PDO $pdo) { ?>
     <form action="script/form-submit.php" method="post">
         <div class="form-group">

@@ -298,10 +298,14 @@ function createTransactionRequest(
     string $referrer,
     int $amount,
     ?int $creditTypeId,
-    array $additionalData
+    array $additionalData,
+    ?DateTimeImmutable $createdAt = null
 ): void {
-    $query = $pdo->prepare('INSERT INTO request (request_id, user_id, referrer, amount, credit_type_id, additional_data) VALUES (?, ?, ?, ?, ?, ?)');
-    $query->execute([$requestId, $userId, $referrer, $amount, $creditTypeId, json_encode($additionalData)]);
+    $createdAt = $createdAt ?? new DateTimeImmutable();
+    $createdAt = $createdAt->format(DATETIME_FORMAT);
+
+    $query = $pdo->prepare('INSERT INTO request (request_id, user_id, referrer, amount, credit_type_id, additional_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    $query->execute([$requestId, $userId, $referrer, $amount, $creditTypeId, json_encode($additionalData), $createdAt]);
 }
 
 /**
@@ -382,7 +386,15 @@ function generateTransactions(PDO $pdo, int $numberOfTransactions, int $minCredi
                     'amount' => $amount,
                     'creditTypeId' => $creditTypeId,
                 ];
-                createTransactionRequest($pdo, $requestId, $userId, $referrer,$amount, $creditTypeId, $additionalData);
+                createTransactionRequest(
+                    $pdo,
+                    $requestId,
+                    $userId,
+                    $referrer,$amount,
+                    $creditTypeId,
+                    $additionalData,
+                    $datetimeCreated
+                );
 
                 if ($amount > 0) {
                     $transactionId = addCredit($pdo, $userId, $creditTypeId, $amount, $datetimeCreated);
